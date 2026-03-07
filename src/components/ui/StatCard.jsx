@@ -1,11 +1,17 @@
-export default function StatCard({ label, value, sub, accent = false }) {
+export default function StatCard({ label, value, sub, accent = false, color = 'emerald' }) {
+  const colors = {
+    emerald: 'text-emerald-400',
+    sky: 'text-sky-400',
+    violet: 'text-violet-400',
+    amber: 'text-amber-400',
+  };
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-1 ${accent ? 'border-green-200 bg-green-50' : ''}`}>
-      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-      <span className={`text-3xl font-bold ${accent ? 'text-green-700' : 'text-gray-900'}`}>
+    <div className={`bg-slate-900 rounded-xl border p-5 flex flex-col gap-1 ${accent ? 'border-emerald-500/30' : 'border-slate-800'}`}>
+      <span className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest">{label}</span>
+      <span className={`text-3xl font-bold tabular-nums ${accent ? colors[color] : 'text-slate-100'}`}>
         {value ?? '—'}
       </span>
-      {sub && <div className="text-xs text-gray-400">{sub}</div>}
+      {sub && <div className="text-xs text-slate-500 mt-0.5">{sub}</div>}
     </div>
   );
 }

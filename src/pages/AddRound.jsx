@@ -18,18 +18,18 @@ const defaultForm = {
 function Field({ label, hint, error, children }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-slate-300">
         {label}
-        {hint && <span className="ml-1 text-gray-400 font-normal text-xs">({hint})</span>}
+        {hint && <span className="ml-1 text-slate-500 font-normal text-xs font-mono">({hint})</span>}
       </label>
       {children}
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-red-400 font-mono">{error}</p>}
     </div>
   );
 }
 
 const inputClass =
-  'w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition';
+  'w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition placeholder:text-slate-600';
 
 export default function AddRound({ onAdd }) {
   const [form, setForm] = useState(defaultForm);
@@ -63,38 +63,31 @@ export default function AddRound({ onAdd }) {
     const e = {};
     if (!form.date) e.date = 'Required';
     if (!form.course.trim()) e.course = 'Required';
-
     if (form.courseRating !== '') {
       const cr = Number(form.courseRating);
-      if (isNaN(cr) || cr < 20 || cr > 90) e.courseRating = 'Typically 30–80 (on scorecard)';
+      if (isNaN(cr) || cr < 20 || cr > 90) e.courseRating = 'Typically 30–80';
     }
     if (form.slopeRating !== '') {
       const sr = Number(form.slopeRating);
-      if (isNaN(sr) || sr < 55 || sr > 155) e.slopeRating = '55–155 (standard is 113)';
+      if (isNaN(sr) || sr < 55 || sr > 155) e.slopeRating = '55–155';
     }
-
     const score = Number(form.score);
     if (is9) {
-      if (form.score === '' || isNaN(score) || score < 25 || score > 100) e.score = 'Enter a valid score (25–100)';
+      if (form.score === '' || isNaN(score) || score < 25 || score > 100) e.score = '25–100';
     } else {
-      if (form.score === '' || isNaN(score) || score < 50 || score > 200) e.score = 'Enter a valid score (50–200)';
+      if (form.score === '' || isNaN(score) || score < 50 || score > 200) e.score = '50–200';
     }
-
     const fairways = Number(form.fairways);
     const maxFairways = is9 ? 7 : 14;
-    if (form.fairways === '' || isNaN(fairways) || fairways < 0 || fairways > maxFairways)
-      e.fairways = `0–${maxFairways}`;
-
+    if (form.fairways === '' || isNaN(fairways) || fairways < 0 || fairways > maxFairways) e.fairways = `0–${maxFairways}`;
     const gir = Number(form.gir);
     if (form.gir === '' || isNaN(gir) || gir < 0 || gir > form.holes) e.gir = `0–${form.holes}`;
-
     const putts = Number(form.putts);
     if (is9) {
-      if (form.putts === '' || isNaN(putts) || putts < 9 || putts > 36) e.putts = 'Enter a valid putt count (9–36)';
+      if (form.putts === '' || isNaN(putts) || putts < 9 || putts > 36) e.putts = '9–36';
     } else {
-      if (form.putts === '' || isNaN(putts) || putts < 18 || putts > 72) e.putts = 'Enter a valid putt count (18–72)';
+      if (form.putts === '' || isNaN(putts) || putts < 18 || putts > 72) e.putts = '18–72';
     }
-
     return e;
   }
 
@@ -122,27 +115,27 @@ export default function AddRound({ onAdd }) {
 
   return (
     <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Add Round</h1>
-      <p className="text-sm text-gray-500 mb-6">Log a new golf round to your tracker.</p>
+      <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-1">Add Round</h1>
+      <p className="text-xs font-mono text-slate-500 mb-6">Log a new round to your tracker.</p>
 
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
 
         {/* Holes toggle */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Holes</label>
-          <div className="flex rounded-lg border border-gray-300 overflow-hidden w-fit">
+          <label className="text-sm font-medium text-slate-300">Holes</label>
+          <div className="flex rounded-lg border border-slate-700 overflow-hidden w-fit">
             {[9, 18].map((h) => (
               <button
                 key={h}
                 type="button"
                 onClick={() => set('holes', h)}
-                className={`px-6 py-2 text-sm font-medium transition-colors ${
+                className={`px-6 py-2 text-sm font-mono font-medium transition-colors ${
                   form.holes === h
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                    ? 'bg-emerald-500 text-slate-950'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
                 }`}
               >
-                {h} Holes
+                {h}H
               </button>
             ))}
           </div>
@@ -150,114 +143,54 @@ export default function AddRound({ onAdd }) {
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Date" error={errors.date}>
-            <input
-              type="date"
-              value={form.date}
-              onChange={(e) => set('date', e.target.value)}
-              className={inputClass}
-            />
+            <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} className={inputClass} />
           </Field>
-
           <Field label="Score" hint="total strokes" error={errors.score}>
-            <input
-              type="number"
-              placeholder={is9 ? 'e.g. 42' : 'e.g. 85'}
-              value={form.score}
-              onChange={(e) => set('score', e.target.value)}
-              className={inputClass}
-            />
+            <input type="number" placeholder={is9 ? '42' : '85'} value={form.score} onChange={(e) => set('score', e.target.value)} className={inputClass} />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Course Name" error={errors.course}>
-            <input
-              type="text"
-              placeholder="e.g. Pebble Beach"
-              value={form.course}
-              onChange={(e) => set('course', e.target.value)}
-              className={inputClass}
-            />
+            <input type="text" placeholder="e.g. Pebble Beach" value={form.course} onChange={(e) => set('course', e.target.value)} className={inputClass} />
           </Field>
           <Field label="Tees" hint="optional">
-            <input
-              type="text"
-              placeholder="e.g. White, Blue"
-              value={form.tees}
-              onChange={(e) => set('tees', e.target.value)}
-              className={inputClass}
-            />
+            <input type="text" placeholder="e.g. White, Blue" value={form.tees} onChange={(e) => set('tees', e.target.value)} className={inputClass} />
           </Field>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <Field label="Fairways Hit" hint={`0–${is9 ? 7 : 14}`} error={errors.fairways}>
-            <input
-              type="number"
-              placeholder={is9 ? '4' : '8'}
-              value={form.fairways}
-              onChange={(e) => set('fairways', e.target.value)}
-              className={inputClass}
-            />
+          <Field label="Fairways" hint={`0–${is9 ? 7 : 14}`} error={errors.fairways}>
+            <input type="number" placeholder={is9 ? '4' : '8'} value={form.fairways} onChange={(e) => set('fairways', e.target.value)} className={inputClass} />
           </Field>
-
           <Field label="GIR" hint={`0–${form.holes}`} error={errors.gir}>
-            <input
-              type="number"
-              placeholder={is9 ? '3' : '6'}
-              value={form.gir}
-              onChange={(e) => set('gir', e.target.value)}
-              className={inputClass}
-            />
+            <input type="number" placeholder={is9 ? '3' : '6'} value={form.gir} onChange={(e) => set('gir', e.target.value)} className={inputClass} />
           </Field>
-
           <Field label="Putts" error={errors.putts}>
-            <input
-              type="number"
-              placeholder={is9 ? '16' : '32'}
-              value={form.putts}
-              onChange={(e) => set('putts', e.target.value)}
-              className={inputClass}
-            />
+            <input type="number" placeholder={is9 ? '16' : '32'} value={form.putts} onChange={(e) => set('putts', e.target.value)} className={inputClass} />
           </Field>
         </div>
 
-        {/* Course rating & slope — optional, used for handicap calculation */}
+        {/* Handicap data */}
         <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-3">
             Handicap Data{' '}
             {autoFilled
-              ? <span className="normal-case font-normal text-green-600">(auto-filled from saved course)</span>
-              : <span className="normal-case font-normal text-gray-400">(optional — found on scorecard or tee sheet)</span>
+              ? <span className="normal-case text-emerald-400">· auto-filled</span>
+              : <span className="normal-case text-slate-600">· optional</span>
             }
           </p>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Course Rating" hint={is9 ? 'e.g. 35.2' : 'e.g. 72.1'} error={errors.courseRating}>
-              <input
-                type="number"
-                step="0.1"
-                placeholder={is9 ? '35.2' : '72.1'}
-                value={form.courseRating}
-                onChange={(e) => set('courseRating', e.target.value)}
-                className={inputClass}
-              />
+              <input type="number" step="0.1" placeholder={is9 ? '35.2' : '72.1'} value={form.courseRating} onChange={(e) => set('courseRating', e.target.value)} className={inputClass} />
             </Field>
             <Field label="Slope Rating" hint="55–155" error={errors.slopeRating}>
-              <input
-                type="number"
-                placeholder="113"
-                value={form.slopeRating}
-                onChange={(e) => set('slopeRating', e.target.value)}
-                className={inputClass}
-              />
+              <input type="number" placeholder="113" value={form.slopeRating} onChange={(e) => set('slopeRating', e.target.value)} className={inputClass} />
             </Field>
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-medium text-sm py-2.5 rounded-lg transition-colors"
-        >
+        <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm py-2.5 rounded-lg transition-colors">
           Save Round
         </button>
       </form>

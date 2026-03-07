@@ -107,6 +107,64 @@ export function calcAvgPutts(rounds) {
   return normed.reduce((sum, r) => sum + r.putts, 0) / normed.length;
 }
 
+export function calcRecentAvg(rounds, n = 5) {
+  if (!rounds.length) return null;
+  const sorted = [...rounds].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const recent = sorted.slice(0, n).map(normalizeRound);
+  return recent.reduce((sum, r) => sum + r.score, 0) / recent.length;
+}
+
+export function calcConsistency(rounds) {
+  if (rounds.length < 2) return null;
+  const normed = rounds.map(normalizeRound);
+  const avg = normed.reduce((s, r) => s + r.score, 0) / normed.length;
+  const variance = normed.reduce((s, r) => s + Math.pow(r.score - avg, 2), 0) / normed.length;
+  return Math.round(Math.sqrt(variance) * 10) / 10;
+}
+
+export function calcScoreDistribution(rounds) {
+  const brackets = [
+    { label: '≤79', min: 0, max: 79 },
+    { label: '80s', min: 80, max: 89 },
+    { label: '90s', min: 90, max: 99 },
+    { label: '100+', min: 100, max: Infinity },
+  ];
+  const normed = rounds.map(normalizeRound);
+  return brackets.map((b) => ({
+    label: b.label,
+    count: normed.filter((r) => r.score >= b.min && r.score <= b.max).length,
+  }));
+}
+
+export function calcCourseStats(rounds) {
+  const map = {};
+  rounds.forEach((r) => {
+    const key = r.course || 'Unknown';
+    if (!map[key]) map[key] = { course: key, scores: [] };
+    map[key].scores.push(normalizeRound(r).score);
+  });
+  return Object.values(map)
+    .map((c) => ({
+      course: c.course,
+      rounds: c.scores.length,
+      avg: Math.round((c.scores.reduce((s, v) => s + v, 0) / c.scores.length) * 10) / 10,
+      best: Math.min(...c.scores),
+    }))
+    .sort((a, b) => a.avg - b.avg);
+}
+
+export function calcTargetHitRates(rounds, targets) {
+  if (!rounds.length || !targets) return null;
+  const normed = rounds.map(normalizeRound);
+  const n = normed.length;
+  return {
+    score: targets.score != null ? Math.round((normed.filter((r) => r.score <= targets.score).length / n) * 100) : null,
+    fairways: targets.fairways != null ? Math.round((normed.filter((r) => r.fairways >= targets.fairways).length / n) * 100) : null,
+    gir: targets.gir != null ? Math.round((normed.filter((r) => r.gir >= targets.gir).length / n) * 100) : null,
+    putts: targets.putts != null ? Math.round((normed.filter((r) => r.putts <= targets.putts).length / n) * 100) : null,
+  };
+}
+
 export function scoreTrendData(rounds) {
   return [...rounds]
     .sort((a, b) => new Date(a.date) - new Date(b.date))
