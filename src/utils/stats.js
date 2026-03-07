@@ -41,7 +41,7 @@ export function calcHandicapIndex(rounds) {
   const sorted = [...diffs].sort((a, b) => a - b);
   const avg = sorted.slice(0, count).reduce((s, d) => s + d, 0) / count;
 
-  const index = Math.min((avg + adjustment) * 0.96, 54.0);
+  const index = Math.min(avg + adjustment, 54.0);
   return Math.round(index * 10) / 10;
 }
 
