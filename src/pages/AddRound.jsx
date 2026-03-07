@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCourses } from '../hooks/useRounds';
 
 const defaultForm = {
   date: new Date().toISOString().slice(0, 10),
   course: '',
+  tees: '',
   holes: 18,
   score: '',
   fairways: '',
@@ -32,12 +34,28 @@ const inputClass =
 export default function AddRound({ onAdd }) {
   const [form, setForm] = useState(defaultForm);
   const [errors, setErrors] = useState({});
+  const [autoFilled, setAutoFilled] = useState(false);
   const navigate = useNavigate();
+  const { saveCourseData, lookupCourse } = useCourses();
 
   const is9 = form.holes === 9;
 
   function set(field, value) {
-    setForm((f) => ({ ...f, [field]: value }));
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value };
+      if (field === 'course' || field === 'tees') {
+        const course = field === 'course' ? value : prev.course;
+        const tees = field === 'tees' ? value : prev.tees;
+        const saved = lookupCourse(course, tees);
+        if (saved) {
+          setAutoFilled(true);
+          return { ...updated, courseRating: String(saved.courseRating), slopeRating: String(saved.slopeRating) };
+        } else {
+          setAutoFilled(false);
+        }
+      }
+      return updated;
+    });
     setErrors((e) => ({ ...e, [field]: undefined }));
   }
 
@@ -84,9 +102,13 @@ export default function AddRound({ onAdd }) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (form.courseRating !== '' && form.slopeRating !== '' && form.tees.trim()) {
+      saveCourseData(form.course, form.tees, Number(form.courseRating), Number(form.slopeRating));
+    }
     onAdd({
       date: form.date,
       course: form.course.trim(),
+      tees: form.tees.trim() || undefined,
       holes: form.holes,
       score: Number(form.score),
       fairways: Number(form.fairways),
@@ -147,15 +169,26 @@ export default function AddRound({ onAdd }) {
           </Field>
         </div>
 
-        <Field label="Course Name" error={errors.course}>
-          <input
-            type="text"
-            placeholder="e.g. Pebble Beach"
-            value={form.course}
-            onChange={(e) => set('course', e.target.value)}
-            className={inputClass}
-          />
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Course Name" error={errors.course}>
+            <input
+              type="text"
+              placeholder="e.g. Pebble Beach"
+              value={form.course}
+              onChange={(e) => set('course', e.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Tees" hint="optional">
+            <input
+              type="text"
+              placeholder="e.g. White, Blue"
+              value={form.tees}
+              onChange={(e) => set('tees', e.target.value)}
+              className={inputClass}
+            />
+          </Field>
+        </div>
 
         <div className="grid grid-cols-3 gap-4">
           <Field label="Fairways Hit" hint={`0–${is9 ? 7 : 14}`} error={errors.fairways}>
@@ -192,7 +225,11 @@ export default function AddRound({ onAdd }) {
         {/* Course rating & slope — optional, used for handicap calculation */}
         <div>
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-            Handicap Data <span className="normal-case font-normal text-gray-400">(optional — found on scorecard or tee sheet)</span>
+            Handicap Data{' '}
+            {autoFilled
+              ? <span className="normal-case font-normal text-green-600">(auto-filled from saved course)</span>
+              : <span className="normal-case font-normal text-gray-400">(optional — found on scorecard or tee sheet)</span>
+            }
           </p>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Course Rating" hint={is9 ? 'e.g. 35.2' : 'e.g. 72.1'} error={errors.courseRating}>
