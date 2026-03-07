@@ -4,6 +4,7 @@ const links = [
   { to: '/', label: 'Dashboard', icon: '📊' },
   { to: '/add', label: 'Add Round', icon: '➕' },
   { to: '/history', label: 'History', icon: '📋' },
+  { to: '/targets', label: 'Goals', icon: '🎯' },
 ];
 
 export default function BottomNav() {

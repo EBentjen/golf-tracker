@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'golf_rounds';
+const TARGETS_KEY = 'golf_targets';
+
+const DEFAULT_TARGETS = { score: 85, fairways: 9, gir: 9, putts: 30 };
 
 function loadRounds() {
   try {
@@ -30,4 +33,22 @@ export function useRounds() {
   }
 
   return { rounds, addRound, deleteRound };
+}
+
+export function useTargets() {
+  const [targets, setTargets] = useState(() => {
+    try {
+      const raw = localStorage.getItem(TARGETS_KEY);
+      return raw ? { ...DEFAULT_TARGETS, ...JSON.parse(raw) } : DEFAULT_TARGETS;
+    } catch {
+      return DEFAULT_TARGETS;
+    }
+  });
+
+  function saveTargets(t) {
+    setTargets(t);
+    localStorage.setItem(TARGETS_KEY, JSON.stringify(t));
+  }
+
+  return { targets, saveTargets };
 }

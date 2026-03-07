@@ -4,10 +4,12 @@ import BottomNav from './components/layout/BottomNav';
 import Dashboard from './pages/Dashboard';
 import AddRound from './pages/AddRound';
 import History from './pages/History';
-import { useRounds } from './hooks/useRounds';
+import Targets from './pages/Targets';
+import { useRounds, useTargets } from './hooks/useRounds';
 
 export default function App() {
   const { rounds, addRound, deleteRound } = useRounds();
+  const { targets, saveTargets } = useTargets();
 
   return (
     <BrowserRouter>
@@ -15,9 +17,10 @@ export default function App() {
         <Sidebar />
         <main className="flex-1 pb-20 md:pb-0 overflow-y-auto">
           <Routes>
-            <Route path="/" element={<Dashboard rounds={rounds} />} />
+            <Route path="/" element={<Dashboard rounds={rounds} targets={targets} />} />
             <Route path="/add" element={<AddRound onAdd={addRound} />} />
             <Route path="/history" element={<History rounds={rounds} onDelete={deleteRound} />} />
+            <Route path="/targets" element={<Targets targets={targets} onSave={saveTargets} />} />
           </Routes>
         </main>
         <BottomNav />

@@ -5,7 +5,7 @@ export default function StatCard({ label, value, sub, accent = false }) {
       <span className={`text-3xl font-bold ${accent ? 'text-green-700' : 'text-gray-900'}`}>
         {value ?? '—'}
       </span>
-      {sub && <span className="text-xs text-gray-400">{sub}</span>}
+      {sub && <div className="text-xs text-gray-400">{sub}</div>}
     </div>
   );
 }

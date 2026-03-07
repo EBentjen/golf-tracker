@@ -1,21 +1,32 @@
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend,
+  ResponsiveContainer, Legend, ReferenceLine,
 } from 'recharts';
 import StatCard from '../components/ui/StatCard';
 import EmptyState from '../components/ui/EmptyState';
 import {
   calcAvgScore, calcBestRound, calcWorstRound,
   calcAvgFairways, calcAvgGIR, calcAvgPutts,
-  scoreTrendData,
+  scoreTrendData, statTrendData,
 } from '../utils/stats';
 
 function fmt(n, decimals = 1) {
   return n != null ? n.toFixed(decimals) : '—';
 }
 
-export default function Dashboard({ rounds }) {
+// lower is better for score/putts, higher is better for fairways/gir
+function TargetBadge({ value, target, lowerIsBetter }) {
+  if (value == null || target == null) return null;
+  const meeting = lowerIsBetter ? value <= target : value >= target;
+  return (
+    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${meeting ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+      {meeting ? 'On target' : `Target: ${target}`}
+    </span>
+  );
+}
+
+export default function Dashboard({ rounds, targets }) {
   if (!rounds.length) return <EmptyState />;
 
   const avg = calcAvgScore(rounds);
@@ -25,28 +36,24 @@ export default function Dashboard({ rounds }) {
   const avgGIR = calcAvgGIR(rounds);
   const avgPutts = calcAvgPutts(rounds);
   const trendData = scoreTrendData(rounds);
-
-  const statBarData = trendData.map((r) => {
-    const full = rounds.find((x) => x.date === r.date && x.course === r.course);
-    return {
-      date: r.date,
-      Fairways: full?.fairways ?? 0,
-      GIR: full?.gir ?? 0,
-      Putts: full?.putts ?? 0,
-    };
-  });
+  const statData = statTrendData(rounds);
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{rounds.length} round{rounds.length !== 1 ? 's' : ''} tracked</p>
+        <p className="text-sm text-gray-500 mt-0.5">{rounds.length} round{rounds.length !== 1 ? 's' : ''} tracked · stats normalized to 18 holes</p>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Avg Score" value={fmt(avg)} sub="strokes per round" accent />
+        <StatCard
+          label="Avg Score"
+          value={fmt(avg)}
+          sub={<TargetBadge value={avg} target={targets?.score} lowerIsBetter />}
+          accent
+        />
         <StatCard label="Best Round" value={best?.score} sub={best?.course} />
         <StatCard label="Worst Round" value={worst?.score} sub={worst?.course} />
         <StatCard label="Total Rounds" value={rounds.length} />
@@ -54,14 +61,31 @@ export default function Dashboard({ rounds }) {
 
       {/* Secondary stats */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Avg Fairways" value={fmt(avgFairways)} sub="per round" />
-        <StatCard label="Avg GIR" value={fmt(avgGIR)} sub="greens in regulation" />
-        <StatCard label="Avg Putts" value={fmt(avgPutts)} sub="per round" />
+        <StatCard
+          label="Avg Fairways"
+          value={fmt(avgFairways)}
+          sub={<TargetBadge value={avgFairways} target={targets?.fairways} lowerIsBetter={false} />}
+        />
+        <StatCard
+          label="Avg GIR"
+          value={fmt(avgGIR)}
+          sub={<TargetBadge value={avgGIR} target={targets?.gir} lowerIsBetter={false} />}
+        />
+        <StatCard
+          label="Avg Putts"
+          value={fmt(avgPutts)}
+          sub={<TargetBadge value={avgPutts} target={targets?.putts} lowerIsBetter />}
+        />
       </div>
 
       {/* Score trend chart */}
       <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Score Trend</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-700">Score Trend</h2>
+          {targets?.score && (
+            <span className="text-xs text-amber-600 font-medium">— Target: {targets.score}</span>
+          )}
+        </div>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -69,8 +93,17 @@ export default function Dashboard({ rounds }) {
             <YAxis tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
             <Tooltip
               contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
-              formatter={(val) => [val, 'Score']}
+              formatter={(val, name) => [val, name === 'score' ? 'Score' : name]}
             />
+            {targets?.score && (
+              <ReferenceLine
+                y={targets.score}
+                stroke="#f59e0b"
+                strokeDasharray="5 4"
+                strokeWidth={1.5}
+                label={{ value: `Goal ${targets.score}`, position: 'insideTopRight', fill: '#f59e0b', fontSize: 11 }}
+              />
+            )}
             <Line
               type="monotone"
               dataKey="score"
@@ -83,22 +116,87 @@ export default function Dashboard({ rounds }) {
         </ResponsiveContainer>
       </div>
 
-      {/* Fairways / GIR / Putts bar chart */}
+      {/* Fairways trend */}
       <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Fairways · GIR · Putts per Round</h2>
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={statBarData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-700">Fairways Hit per Round</h2>
+          {targets?.fairways && (
+            <span className="text-xs text-amber-600 font-medium">— Target: {targets.fairways}</span>
+          )}
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={statData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
-            <Tooltip
-              contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
-            />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="Fairways" fill="#16a34a" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="GIR" fill="#4ade80" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="Putts" fill="#bbf7d0" radius={[3, 3, 0, 0]} />
-          </BarChart>
+            <YAxis tick={{ fontSize: 11 }} domain={[0, 14]} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+            {targets?.fairways && (
+              <ReferenceLine
+                y={targets.fairways}
+                stroke="#f59e0b"
+                strokeDasharray="5 4"
+                strokeWidth={1.5}
+                label={{ value: `Goal ${targets.fairways}`, position: 'insideTopRight', fill: '#f59e0b', fontSize: 11 }}
+              />
+            )}
+            <Line type="monotone" dataKey="Fairways" stroke="#16a34a" strokeWidth={2.5} dot={{ r: 4, fill: '#16a34a' }} activeDot={{ r: 6 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* GIR trend */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-700">Greens in Regulation per Round</h2>
+          {targets?.gir && (
+            <span className="text-xs text-amber-600 font-medium">— Target: {targets.gir}</span>
+          )}
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={statData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} domain={[0, 18]} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+            {targets?.gir && (
+              <ReferenceLine
+                y={targets.gir}
+                stroke="#f59e0b"
+                strokeDasharray="5 4"
+                strokeWidth={1.5}
+                label={{ value: `Goal ${targets.gir}`, position: 'insideTopRight', fill: '#f59e0b', fontSize: 11 }}
+              />
+            )}
+            <Line type="monotone" dataKey="GIR" stroke="#4ade80" strokeWidth={2.5} dot={{ r: 4, fill: '#4ade80' }} activeDot={{ r: 6 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Putts trend */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-700">Putts per Round</h2>
+          {targets?.putts && (
+            <span className="text-xs text-amber-600 font-medium">— Target: {targets.putts}</span>
+          )}
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={statData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+            {targets?.putts && (
+              <ReferenceLine
+                y={targets.putts}
+                stroke="#f59e0b"
+                strokeDasharray="5 4"
+                strokeWidth={1.5}
+                label={{ value: `Goal ${targets.putts}`, position: 'insideTopRight', fill: '#f59e0b', fontSize: 11 }}
+              />
+            )}
+            <Line type="monotone" dataKey="Putts" stroke="#86efac" strokeWidth={2.5} dot={{ r: 4, fill: '#86efac' }} activeDot={{ r: 6 }} />
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </div>

@@ -63,7 +63,7 @@ export default function History({ rounds, onDelete }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50">
-              {['Date', 'Course', 'Score', 'Fairways', 'GIR', 'Putts', ''].map((h) => (
+              {['Date', 'Course', 'Holes', 'Score', 'Fairways', 'GIR', 'Putts', ''].map((h) => (
                 <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">
                   {h}
                 </th>
@@ -75,6 +75,11 @@ export default function History({ rounds, onDelete }) {
               <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 text-gray-600">{r.date}</td>
                 <td className="px-4 py-3 font-medium text-gray-900">{r.course}</td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${(r.holes ?? 18) === 9 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {r.holes ?? 18}H
+                  </span>
+                </td>
                 <td className="px-4 py-3">
                   <span className="font-bold text-gray-900">{r.score}</span>
                 </td>
@@ -108,7 +113,12 @@ export default function History({ rounds, onDelete }) {
                 <p className="font-semibold text-gray-900">{r.course}</p>
                 <p className="text-xs text-gray-400">{r.date}</p>
               </div>
-              <span className="text-2xl font-bold text-green-700">{r.score}</span>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${(r.holes ?? 18) === 9 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                  {r.holes ?? 18}H
+                </span>
+                <span className="text-2xl font-bold text-green-700">{r.score}</span>
+              </div>
             </div>
             <div className="flex gap-4 text-xs text-gray-500">
               <span>Fairways: <strong className="text-gray-700">{r.fairways}</strong></span>
