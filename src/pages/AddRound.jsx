@@ -9,6 +9,8 @@ const defaultForm = {
   fairways: '',
   gir: '',
   putts: '',
+  courseRating: '',
+  slopeRating: '',
 };
 
 function Field({ label, hint, error, children }) {
@@ -43,6 +45,15 @@ export default function AddRound({ onAdd }) {
     const e = {};
     if (!form.date) e.date = 'Required';
     if (!form.course.trim()) e.course = 'Required';
+
+    if (form.courseRating !== '') {
+      const cr = Number(form.courseRating);
+      if (isNaN(cr) || cr < 20 || cr > 90) e.courseRating = 'Typically 30–80 (on scorecard)';
+    }
+    if (form.slopeRating !== '') {
+      const sr = Number(form.slopeRating);
+      if (isNaN(sr) || sr < 55 || sr > 155) e.slopeRating = '55–155 (standard is 113)';
+    }
 
     const score = Number(form.score);
     if (is9) {
@@ -81,6 +92,8 @@ export default function AddRound({ onAdd }) {
       fairways: Number(form.fairways),
       gir: Number(form.gir),
       putts: Number(form.putts),
+      ...(form.courseRating !== '' && { courseRating: Number(form.courseRating) }),
+      ...(form.slopeRating !== '' && { slopeRating: Number(form.slopeRating) }),
     });
     navigate('/');
   }
@@ -174,6 +187,34 @@ export default function AddRound({ onAdd }) {
               className={inputClass}
             />
           </Field>
+        </div>
+
+        {/* Course rating & slope — optional, used for handicap calculation */}
+        <div>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+            Handicap Data <span className="normal-case font-normal text-gray-400">(optional — found on scorecard or tee sheet)</span>
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Course Rating" hint={is9 ? 'e.g. 35.2' : 'e.g. 72.1'} error={errors.courseRating}>
+              <input
+                type="number"
+                step="0.1"
+                placeholder={is9 ? '35.2' : '72.1'}
+                value={form.courseRating}
+                onChange={(e) => set('courseRating', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Slope Rating" hint="55–155" error={errors.slopeRating}>
+              <input
+                type="number"
+                placeholder="113"
+                value={form.slopeRating}
+                onChange={(e) => set('slopeRating', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
         </div>
 
         <button
