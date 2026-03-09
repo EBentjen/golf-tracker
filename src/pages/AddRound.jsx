@@ -11,6 +11,8 @@ const defaultForm = {
   fairways: '',
   gir: '',
   putts: '',
+  birdies: '',
+  eagles: '',
   courseRating: '',
   slopeRating: '',
 };
@@ -88,6 +90,16 @@ export default function AddRound({ onAdd }) {
     } else {
       if (form.putts === '' || isNaN(putts) || putts < 18 || putts > 72) e.putts = '18–72';
     }
+    if (form.birdies !== '') {
+      const b = Number(form.birdies);
+      if (isNaN(b) || b < 0 || b > form.holes) e.birdies = `0–${form.holes}`;
+    }
+    if (form.eagles !== '') {
+      const eg = Number(form.eagles);
+      const b = Number(form.birdies) || 0;
+      if (isNaN(eg) || eg < 0 || eg > form.holes) e.eagles = `0–${form.holes}`;
+      else if (eg > b) e.eagles = 'Cannot exceed birdies';
+    }
     return e;
   }
 
@@ -107,6 +119,8 @@ export default function AddRound({ onAdd }) {
       fairways: Number(form.fairways),
       gir: Number(form.gir),
       putts: Number(form.putts),
+      ...(form.birdies !== '' && { birdies: Number(form.birdies) }),
+      ...(form.eagles !== '' && { eagles: Number(form.eagles) }),
       ...(form.courseRating !== '' && { courseRating: Number(form.courseRating) }),
       ...(form.slopeRating !== '' && { slopeRating: Number(form.slopeRating) }),
     });
@@ -169,6 +183,19 @@ export default function AddRound({ onAdd }) {
           <Field label="Putts" error={errors.putts}>
             <input type="number" placeholder={is9 ? '16' : '32'} value={form.putts} onChange={(e) => set('putts', e.target.value)} className={inputClass} />
           </Field>
+        </div>
+
+        {/* Scoring */}
+        <div>
+          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-3">Scoring · optional</p>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Birdies" hint={`0–${form.holes}`} error={errors.birdies}>
+              <input type="number" min="0" max={form.holes} placeholder="0" value={form.birdies} onChange={(e) => set('birdies', e.target.value)} className={inputClass} />
+            </Field>
+            <Field label="Eagles" hint="≤ birdies" error={errors.eagles}>
+              <input type="number" min="0" max={form.holes} placeholder="0" value={form.eagles} onChange={(e) => set('eagles', e.target.value)} className={inputClass} />
+            </Field>
+          </div>
         </div>
 
         {/* Handicap data */}

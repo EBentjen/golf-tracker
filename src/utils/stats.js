@@ -165,12 +165,50 @@ export function calcTargetHitRates(rounds, targets) {
   };
 }
 
+export function calcTotalBirdies(rounds) {
+  return rounds.reduce((sum, r) => sum + (r.birdies ?? 0), 0);
+}
+
+export function calcTotalEagles(rounds) {
+  return rounds.reduce((sum, r) => sum + (r.eagles ?? 0), 0);
+}
+
+export function calcAvgBirdiesPerRound(rounds) {
+  const withData = rounds.filter((r) => r.birdies != null);
+  if (!withData.length) return null;
+  return withData.reduce((s, r) => s + r.birdies, 0) / withData.length;
+}
+
+// Trend data for birdies/eagles (raw, not normalized)
+export function birdiesTrendData(rounds) {
+  return [...rounds]
+    .filter((r) => r.birdies != null)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((r) => ({ date: r.date, birdies: r.birdies, eagles: r.eagles ?? 0 }));
+}
+
 export function scoreTrendData(rounds) {
   return [...rounds]
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .map((r) => {
       const norm = normalizeRound(r);
-      return { date: r.date, score: norm.score, course: r.course, holes: r.holes ?? 18 };
+      // Carry full round for drill-down click
+      return {
+        id: r.id,
+        date: r.date,
+        score: norm.score,
+        rawScore: r.score,
+        course: r.course,
+        tees: r.tees,
+        holes: r.holes ?? 18,
+        fairways: r.fairways,
+        gir: r.gir,
+        putts: r.putts,
+        birdies: r.birdies,
+        eagles: r.eagles,
+        courseRating: r.courseRating,
+        slopeRating: r.slopeRating,
+      };
     });
 }
 

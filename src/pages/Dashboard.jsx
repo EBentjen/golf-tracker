@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -12,9 +13,11 @@ import {
   calcHandicapIndex, isHandicapProvisional, handicapTrendData,
   calcRecentAvg, calcConsistency, calcScoreDistribution,
   calcCourseStats, calcTargetHitRates,
+  calcTotalBirdies, calcTotalEagles, calcAvgBirdiesPerRound, birdiesTrendData,
+  calcScoreDifferential,
 } from '../utils/stats';
 
-const CHART_STYLE = {
+const CS = {
   tooltip: {
     contentStyle: {
       fontSize: 12,
@@ -33,11 +36,14 @@ function fmt(n, decimals = 1) {
   return n != null ? n.toFixed(decimals) : '—';
 }
 
-function ChartCard({ title, badge, children, height = 220 }) {
+function ChartCard({ title, badge, children, height = 220, hint }) {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-mono font-semibold text-slate-300 uppercase tracking-widest">{title}</h2>
+        <div>
+          <h2 className="text-sm font-mono font-semibold text-slate-300 uppercase tracking-widest">{title}</h2>
+          {hint && <p className="text-xs text-slate-600 font-mono mt-0.5">{hint}</p>}
+        </div>
         {badge && <span className="text-xs text-amber-400 font-mono">{badge}</span>}
       </div>
       <ResponsiveContainer width="100%" height={height}>
@@ -53,17 +59,113 @@ function HitRateBar({ label, pct, color = '#34d399' }) {
     <div className="flex items-center gap-3">
       <span className="text-xs font-mono text-slate-400 w-20 shrink-0">{label}</span>
       <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
-        <div
-          className="h-2 rounded-full transition-all"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
+        <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
       <span className="text-xs font-mono tabular-nums w-10 text-right" style={{ color }}>{pct}%</span>
     </div>
   );
 }
 
+function StatRow({ label, value, sub, color = 'text-slate-100' }) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-slate-800/60 last:border-0">
+      <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">{label}</span>
+      <div className="text-right">
+        <span className={`text-sm font-bold tabular-nums ${color}`}>{value ?? '—'}</span>
+        {sub && <span className="text-xs text-slate-600 font-mono ml-2">{sub}</span>}
+      </div>
+    </div>
+  );
+}
+
+function RoundModal({ round, onClose }) {
+  if (!round) return null;
+  const diff = calcScoreDifferential(round);
+  const is9 = round.holes === 9;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-5 pt-5 pb-4 border-b border-slate-800">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-1">{round.date}</p>
+              <h3 className="text-lg font-bold text-slate-100">{round.course}</h3>
+              {round.tees && <p className="text-xs text-slate-500 font-mono mt-0.5">{round.tees} tees</p>}
+            </div>
+            <div className="text-right">
+              <p className="text-4xl font-bold tabular-nums text-emerald-400">{round.rawScore}</p>
+              <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full mt-1 inline-block ${
+                is9 ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'
+              }`}>{round.holes}H</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats grid */}
+        <div className="px-5 py-4 space-y-0">
+          {round.birdies != null && (
+            <StatRow label="Birdies" value={round.birdies} color="text-emerald-400" />
+          )}
+          {round.eagles != null && round.eagles > 0 && (
+            <StatRow label="Eagles" value={round.eagles} color="text-yellow-400" />
+          )}
+          <StatRow
+            label="Fairways"
+            value={round.fairways}
+            sub={`/ ${is9 ? 7 : 14}`}
+            color={round.fairways >= (is9 ? 4 : 9) ? 'text-emerald-400' : 'text-slate-100'}
+          />
+          <StatRow
+            label="GIR"
+            value={round.gir}
+            sub={`/ ${round.holes}`}
+            color={round.gir >= (is9 ? 4 : 9) ? 'text-emerald-400' : 'text-slate-100'}
+          />
+          <StatRow
+            label="Putts"
+            value={round.putts}
+            color={round.putts <= (is9 ? 16 : 32) ? 'text-emerald-400' : 'text-slate-100'}
+          />
+          {round.courseRating != null && (
+            <StatRow label="Course Rating" value={round.courseRating} />
+          )}
+          {round.slopeRating != null && (
+            <StatRow label="Slope Rating" value={round.slopeRating} />
+          )}
+          {diff != null && (
+            <StatRow
+              label="Score Differential"
+              value={diff.toFixed(1)}
+              color={diff < 0 ? 'text-emerald-400' : 'text-slate-100'}
+            />
+          )}
+        </div>
+
+        <div className="px-5 pb-5">
+          <button
+            onClick={onClose}
+            className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-mono py-2.5 rounded-lg transition-colors border border-slate-700"
+          >
+            close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard({ rounds, targets }) {
+  const [selectedRound, setSelectedRound] = useState(null);
+
   if (!rounds.length) return <EmptyState />;
 
   const avg = calcAvgScore(rounds);
@@ -82,12 +184,23 @@ export default function Dashboard({ rounds, targets }) {
   const scoreDist = calcScoreDistribution(rounds);
   const courseStats = calcCourseStats(rounds);
   const hitRates = calcTargetHitRates(rounds, targets);
+  const totalBirdies = calcTotalBirdies(rounds);
+  const totalEagles = calcTotalEagles(rounds);
+  const avgBirdies = calcAvgBirdiesPerRound(rounds);
+  const birdieTrend = birdiesTrendData(rounds);
+  const hasBirdieData = rounds.some((r) => r.birdies != null);
 
   const recentDelta = avg != null && recentAvg != null ? recentAvg - avg : null;
-  const trendUp = recentDelta != null && recentDelta < 0; // lower score = better
+  const trendUp = recentDelta != null && recentDelta < 0;
   const trendLabel = recentDelta != null
     ? `${trendUp ? '▼' : '▲'} ${Math.abs(recentDelta).toFixed(1)} vs avg`
     : null;
+
+  function handleChartClick(data) {
+    if (data?.activePayload?.[0]?.payload) {
+      setSelectedRound(data.activePayload[0].payload);
+    }
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -103,9 +216,7 @@ export default function Dashboard({ rounds, targets }) {
           <div className="text-right">
             <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">HCP Index</p>
             <p className="text-3xl font-bold tabular-nums text-emerald-400">{fmt(handicapIndex)}</p>
-            {handicapProvisional && (
-              <p className="text-xs text-amber-400 font-mono">provisional</p>
-            )}
+            {handicapProvisional && <p className="text-xs text-amber-400 font-mono">provisional</p>}
           </div>
         )}
       </div>
@@ -115,8 +226,7 @@ export default function Dashboard({ rounds, targets }) {
         <StatCard label="Avg Score" value={fmt(avg)} accent color="emerald"
           sub={targets?.score ? (avg <= targets.score
             ? <span className="text-emerald-400 font-mono">✓ on target</span>
-            : <span className="text-red-400 font-mono">target {targets.score}</span>)
-            : null}
+            : <span className="text-red-400 font-mono">target {targets.score}</span>) : null}
         />
         <StatCard label="Last 5 Avg" value={fmt(recentAvg)}
           sub={trendLabel
@@ -135,22 +245,35 @@ export default function Dashboard({ rounds, targets }) {
         <StatCard label="Avg Fairways" value={fmt(avgFairways)}
           sub={targets?.fairways ? (avgFairways >= targets.fairways
             ? <span className="text-emerald-400 font-mono">✓ on target</span>
-            : <span className="text-red-400 font-mono">target {targets.fairways}</span>)
-            : null}
+            : <span className="text-red-400 font-mono">target {targets.fairways}</span>) : null}
         />
         <StatCard label="Avg GIR" value={fmt(avgGIR)}
           sub={targets?.gir ? (avgGIR >= targets.gir
             ? <span className="text-emerald-400 font-mono">✓ on target</span>
-            : <span className="text-red-400 font-mono">target {targets.gir}</span>)
-            : null}
+            : <span className="text-red-400 font-mono">target {targets.gir}</span>) : null}
         />
         <StatCard label="Avg Putts" value={fmt(avgPutts)}
           sub={targets?.putts ? (avgPutts <= targets.putts
             ? <span className="text-emerald-400 font-mono">✓ on target</span>
-            : <span className="text-red-400 font-mono">target {targets.putts}</span>)
-            : null}
+            : <span className="text-red-400 font-mono">target {targets.putts}</span>) : null}
         />
       </div>
+
+      {/* Birdie / Eagle cards */}
+      {hasBirdieData && (
+        <div className="grid grid-cols-3 gap-3">
+          <StatCard label="Total Birdies" value={totalBirdies} accent color="emerald"
+            sub={<span className="font-mono">all rounds</span>}
+          />
+          <StatCard label="Avg Birdies" value={fmt(avgBirdies)}
+            sub={<span className="font-mono">per round</span>}
+            color="emerald"
+          />
+          <StatCard label="Total Eagles" value={totalEagles} accent color="amber"
+            sub={<span className="font-mono">all rounds</span>}
+          />
+        </div>
+      )}
 
       {/* Target Hit Rates */}
       {hitRates && (
@@ -165,46 +288,67 @@ export default function Dashboard({ rounds, targets }) {
         </div>
       )}
 
-      {/* Score Trend */}
-      <ChartCard title="Score Trend" badge={targets?.score ? `target · ${targets.score}` : null} height={240}>
-        <LineChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
-          <XAxis dataKey="date" tick={CHART_STYLE.tick} />
-          <YAxis tick={CHART_STYLE.tick} domain={['auto', 'auto']} />
-          <Tooltip {...CHART_STYLE.tooltip} formatter={(val) => [val, 'Score']} />
+      {/* Score Trend — clickable */}
+      <ChartCard
+        title="Score Trend"
+        badge={targets?.score ? `target · ${targets.score}` : null}
+        hint="click a dot to see round details"
+        height={240}
+      >
+        <LineChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
+          <XAxis dataKey="date" tick={CS.tick} />
+          <YAxis tick={CS.tick} domain={['auto', 'auto']} />
+          <Tooltip {...CS.tooltip} formatter={(val, name, props) => [props.payload.rawScore ?? val, 'Score']} />
           {targets?.score && (
             <ReferenceLine y={targets.score} stroke="#fbbf24" strokeDasharray="5 4" strokeWidth={1.5}
               label={{ value: `${targets.score}`, position: 'insideTopRight', fill: '#fbbf24', fontSize: 10, fontFamily: 'monospace' }}
             />
           )}
           <Line type="monotone" dataKey="score" stroke="#34d399" strokeWidth={2.5}
-            dot={{ r: 4, fill: '#34d399', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+            dot={{ r: 5, fill: '#34d399', strokeWidth: 0, cursor: 'pointer' }} activeDot={{ r: 7, fill: '#34d399' }} />
         </LineChart>
       </ChartCard>
 
       {/* Score Distribution */}
       <ChartCard title="Score Distribution" height={180}>
         <BarChart data={scoreDist} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} vertical={false} />
-          <XAxis dataKey="label" tick={CHART_STYLE.tick} />
-          <YAxis tick={CHART_STYLE.tick} allowDecimals={false} />
-          <Tooltip {...CHART_STYLE.tooltip} formatter={(val) => [val, 'Rounds']} />
+          <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} vertical={false} />
+          <XAxis dataKey="label" tick={CS.tick} />
+          <YAxis tick={CS.tick} allowDecimals={false} />
+          <Tooltip {...CS.tooltip} formatter={(val) => [val, 'Rounds']} />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-            {scoreDist.map((entry, i) => (
+            {scoreDist.map((_, i) => (
               <Cell key={i} fill={['#34d399', '#38bdf8', '#a78bfa', '#fb923c'][i]} />
             ))}
           </Bar>
         </BarChart>
       </ChartCard>
 
-      {/* Stat trends side by side */}
+      {/* Birdie / Eagle trend */}
+      {birdieTrend.length >= 2 && (
+        <ChartCard title="Birdies & Eagles per Round" height={180}>
+          <LineChart data={birdieTrend} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
+            <XAxis dataKey="date" tick={CS.tick} />
+            <YAxis tick={CS.tick} allowDecimals={false} />
+            <Tooltip {...CS.tooltip} />
+            <Line type="monotone" dataKey="birdies" stroke="#34d399" strokeWidth={2.5} name="Birdies"
+              dot={{ r: 4, fill: '#34d399', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+            <Line type="monotone" dataKey="eagles" stroke="#fbbf24" strokeWidth={2} name="Eagles"
+              dot={{ r: 4, fill: '#fbbf24', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+          </LineChart>
+        </ChartCard>
+      )}
+
+      {/* Stat trends */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <ChartCard title="Fairways" badge={targets?.fairways ? `tgt ${targets.fairways}` : null} height={160}>
           <LineChart data={statData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
-            <XAxis dataKey="date" tick={{ ...CHART_STYLE.tick, fontSize: 9 }} />
-            <YAxis tick={CHART_STYLE.tick} domain={[0, 14]} />
-            <Tooltip {...CHART_STYLE.tooltip} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
+            <XAxis dataKey="date" tick={{ ...CS.tick, fontSize: 9 }} />
+            <YAxis tick={CS.tick} domain={[0, 14]} />
+            <Tooltip {...CS.tooltip} />
             {targets?.fairways && <ReferenceLine y={targets.fairways} stroke="#fbbf24" strokeDasharray="4 3" strokeWidth={1.5} />}
             <Line type="monotone" dataKey="Fairways" stroke="#38bdf8" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </LineChart>
@@ -212,10 +356,10 @@ export default function Dashboard({ rounds, targets }) {
 
         <ChartCard title="GIR" badge={targets?.gir ? `tgt ${targets.gir}` : null} height={160}>
           <LineChart data={statData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
-            <XAxis dataKey="date" tick={{ ...CHART_STYLE.tick, fontSize: 9 }} />
-            <YAxis tick={CHART_STYLE.tick} domain={[0, 18]} />
-            <Tooltip {...CHART_STYLE.tooltip} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
+            <XAxis dataKey="date" tick={{ ...CS.tick, fontSize: 9 }} />
+            <YAxis tick={CS.tick} domain={[0, 18]} />
+            <Tooltip {...CS.tooltip} />
             {targets?.gir && <ReferenceLine y={targets.gir} stroke="#fbbf24" strokeDasharray="4 3" strokeWidth={1.5} />}
             <Line type="monotone" dataKey="GIR" stroke="#a78bfa" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </LineChart>
@@ -223,10 +367,10 @@ export default function Dashboard({ rounds, targets }) {
 
         <ChartCard title="Putts" badge={targets?.putts ? `tgt ${targets.putts}` : null} height={160}>
           <LineChart data={statData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
-            <XAxis dataKey="date" tick={{ ...CHART_STYLE.tick, fontSize: 9 }} />
-            <YAxis tick={CHART_STYLE.tick} domain={['auto', 'auto']} />
-            <Tooltip {...CHART_STYLE.tooltip} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
+            <XAxis dataKey="date" tick={{ ...CS.tick, fontSize: 9 }} />
+            <YAxis tick={CS.tick} domain={['auto', 'auto']} />
+            <Tooltip {...CS.tooltip} />
             {targets?.putts && <ReferenceLine y={targets.putts} stroke="#fbbf24" strokeDasharray="4 3" strokeWidth={1.5} />}
             <Line type="monotone" dataKey="Putts" stroke="#fb923c" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </LineChart>
@@ -268,23 +412,25 @@ export default function Dashboard({ rounds, targets }) {
       {hcpTrend.length >= 2 && (
         <ChartCard title="Handicap Index Trend" badge="lower = better" height={200}>
           <LineChart data={hcpTrend} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
-            <XAxis dataKey="date" tick={CHART_STYLE.tick} />
-            <YAxis tick={CHART_STYLE.tick} domain={['auto', 'auto']} />
-            <Tooltip {...CHART_STYLE.tooltip} formatter={(val) => [val.toFixed(1), 'HCP Index']} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
+            <XAxis dataKey="date" tick={CS.tick} />
+            <YAxis tick={CS.tick} domain={['auto', 'auto']} />
+            <Tooltip {...CS.tooltip} formatter={(val) => [val.toFixed(1), 'HCP Index']} />
             <Line type="monotone" dataKey="handicap" stroke="#34d399" strokeWidth={2.5}
               dot={{ r: 4, fill: '#34d399', strokeWidth: 0 }} activeDot={{ r: 6 }} />
           </LineChart>
         </ChartCard>
       )}
 
-      {/* No handicap prompt */}
       {handicapIndex == null && (
         <div className="bg-slate-900 border border-dashed border-slate-700 rounded-xl p-5 text-center">
           <p className="text-sm font-medium text-slate-400">No Handicap Index yet</p>
           <p className="text-xs text-slate-600 mt-1 font-mono">Add Course Rating + Slope when logging rounds to calculate WHS Handicap Index</p>
         </div>
       )}
+
+      {/* Round detail modal */}
+      <RoundModal round={selectedRound} onClose={() => setSelectedRound(null)} />
     </div>
   );
 }
