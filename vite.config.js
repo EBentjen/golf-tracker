@@ -40,7 +40,6 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Cache all app assets so it works offline
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
