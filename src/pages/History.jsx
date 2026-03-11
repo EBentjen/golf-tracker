@@ -60,7 +60,8 @@ export default function History({ rounds, onDelete }) {
 
       {/* Desktop table */}
       <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[720px]">
           <thead>
             <tr className="border-b border-slate-800">
               {['Date', 'Course', 'H', 'Score', 'FWY', 'GIR', 'Putts', 'Bir', 'Egl', ''].map((h) => (
@@ -121,6 +122,7 @@ export default function History({ rounds, onDelete }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Mobile cards */}
