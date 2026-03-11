@@ -112,11 +112,14 @@ function RoundModal({ round, onClose }) {
 
         {/* Stats grid */}
         <div className="px-5 py-4 space-y-0">
+          {round.eagles != null && round.eagles > 0 && (
+            <StatRow label="Eagles" value={round.eagles} color="text-yellow-400" />
+          )}
           {round.birdies != null && (
             <StatRow label="Birdies" value={round.birdies} color="text-emerald-400" />
           )}
-          {round.eagles != null && round.eagles > 0 && (
-            <StatRow label="Eagles" value={round.eagles} color="text-yellow-400" />
+          {round.doubleBogeys != null && (
+            <StatRow label="Dbl Bogeys+" value={round.doubleBogeys} color={round.doubleBogeys === 0 ? 'text-emerald-400' : 'text-red-400'} />
           )}
           <StatRow
             label="Fairways"
@@ -163,32 +166,54 @@ function RoundModal({ round, onClose }) {
   );
 }
 
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'ytd', label: 'YTD' },
+  { key: 'last50', label: 'Last 50' },
+  { key: 'last25', label: 'Last 25' },
+  { key: 'last10', label: 'Last 10' },
+];
+
+function applyFilter(rounds, filter) {
+  if (filter === 'ytd') {
+    const year = new Date().getFullYear().toString();
+    return rounds.filter((r) => r.date?.startsWith(year));
+  }
+  if (filter === 'last50') return rounds.slice(-50);
+  if (filter === 'last25') return rounds.slice(-25);
+  if (filter === 'last10') return rounds.slice(-10);
+  return rounds;
+}
+
 export default function Dashboard({ rounds, targets }) {
   const [selectedRound, setSelectedRound] = useState(null);
+  const [filter, setFilter] = useState('all');
 
   if (!rounds.length) return <EmptyState />;
 
-  const avg = calcAvgScore(rounds);
-  const best = calcBestRound(rounds);
-  const worst = calcWorstRound(rounds);
-  const avgFairways = calcAvgFairways(rounds);
-  const avgGIR = calcAvgGIR(rounds);
-  const avgPutts = calcAvgPutts(rounds);
-  const recentAvg = calcRecentAvg(rounds, 5);
-  const consistency = calcConsistency(rounds);
-  const trendData = scoreTrendData(rounds);
-  const statData = statTrendData(rounds);
-  const handicapIndex = calcHandicapIndex(rounds);
-  const handicapProvisional = handicapIndex != null && isHandicapProvisional(rounds);
-  const hcpTrend = handicapTrendData(rounds);
-  const scoreDist = calcScoreDistribution(rounds);
-  const courseStats = calcCourseStats(rounds);
-  const hitRates = calcTargetHitRates(rounds, targets);
-  const totalBirdies = calcTotalBirdies(rounds);
-  const totalEagles = calcTotalEagles(rounds);
-  const avgBirdies = calcAvgBirdiesPerRound(rounds);
-  const birdieTrend = birdiesTrendData(rounds);
-  const hasBirdieData = rounds.some((r) => r.birdies != null);
+  const filteredRounds = applyFilter(rounds, filter);
+
+  const avg = calcAvgScore(filteredRounds);
+  const best = calcBestRound(filteredRounds);
+  const worst = calcWorstRound(filteredRounds);
+  const avgFairways = calcAvgFairways(filteredRounds);
+  const avgGIR = calcAvgGIR(filteredRounds);
+  const avgPutts = calcAvgPutts(filteredRounds);
+  const recentAvg = calcRecentAvg(filteredRounds, 5);
+  const consistency = calcConsistency(filteredRounds);
+  const trendData = scoreTrendData(filteredRounds);
+  const statData = statTrendData(filteredRounds);
+  const handicapIndex = calcHandicapIndex(filteredRounds);
+  const handicapProvisional = handicapIndex != null && isHandicapProvisional(filteredRounds);
+  const hcpTrend = handicapTrendData(filteredRounds);
+  const scoreDist = calcScoreDistribution(filteredRounds);
+  const courseStats = calcCourseStats(filteredRounds);
+  const hitRates = calcTargetHitRates(filteredRounds, targets);
+  const totalBirdies = calcTotalBirdies(filteredRounds);
+  const totalEagles = calcTotalEagles(filteredRounds);
+  const avgBirdies = calcAvgBirdiesPerRound(filteredRounds);
+  const birdieTrend = birdiesTrendData(filteredRounds);
+  const hasBirdieData = filteredRounds.some((r) => r.birdies != null);
 
   const recentDelta = avg != null && recentAvg != null ? recentAvg - avg : null;
   const trendUp = recentDelta != null && recentDelta < 0;
@@ -209,7 +234,7 @@ export default function Dashboard({ rounds, targets }) {
         <div>
           <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Dashboard</h1>
           <p className="text-xs font-mono text-slate-500 mt-0.5">
-            {rounds.length} ROUND{rounds.length !== 1 ? 'S' : ''} · 18H NORMALIZED
+            {filteredRounds.length} ROUND{filteredRounds.length !== 1 ? 'S' : ''} · 18H NORMALIZED
           </p>
         </div>
         {handicapIndex != null && (
@@ -219,6 +244,23 @@ export default function Dashboard({ rounds, targets }) {
             {handicapProvisional && <p className="text-xs text-amber-400 font-mono">provisional</p>}
           </div>
         )}
+      </div>
+
+      {/* Filter */}
+      <div className="flex gap-1.5 flex-wrap">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`px-3 py-1.5 text-xs font-mono font-medium rounded-lg border transition-colors ${
+              filter === f.key
+                ? 'bg-emerald-500 border-emerald-500 text-slate-950'
+                : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {/* Primary stat cards */}

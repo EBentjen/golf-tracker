@@ -12,6 +12,7 @@ const defaultForm = {
   putts: '',
   birdies: '',
   eagles: '',
+  doubleBogeys: '',
   courseRating: '',
   slopeRating: '',
 };
@@ -98,6 +99,10 @@ export default function AddRound({ onAdd }) {
       if (isNaN(eg) || eg < 0 || eg > form.holes) e.eagles = `0–${form.holes}`;
       else if (eg > b) e.eagles = 'Cannot exceed birdies';
     }
+    if (form.doubleBogeys !== '') {
+      const db = Number(form.doubleBogeys);
+      if (isNaN(db) || db < 0 || db > form.holes) e.doubleBogeys = `0–${form.holes}`;
+    }
     return e;
   }
 
@@ -118,6 +123,7 @@ export default function AddRound({ onAdd }) {
       putts: Number(form.putts),
       ...(form.birdies !== '' && { birdies: Number(form.birdies) }),
       ...(form.eagles !== '' && { eagles: Number(form.eagles) }),
+      ...(form.doubleBogeys !== '' && { doubleBogeys: Number(form.doubleBogeys) }),
       ...(form.courseRating !== '' && { courseRating: Number(form.courseRating) }),
       ...(form.slopeRating !== '' && { slopeRating: Number(form.slopeRating) }),
     });
@@ -180,12 +186,15 @@ export default function AddRound({ onAdd }) {
         {/* Scoring */}
         <div>
           <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-3">Scoring · optional</p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Field label="Birdies" hint={`0–${form.holes}`} error={errors.birdies}>
               <input type="number" min="0" max={form.holes} placeholder="0" value={form.birdies} onChange={(e) => set('birdies', e.target.value)} className={inputClass} />
             </Field>
             <Field label="Eagles" hint="≤ birdies" error={errors.eagles}>
               <input type="number" min="0" max={form.holes} placeholder="0" value={form.eagles} onChange={(e) => set('eagles', e.target.value)} className={inputClass} />
+            </Field>
+            <Field label="Dbl Bogeys+" hint={`0–${form.holes}`} error={errors.doubleBogeys}>
+              <input type="number" min="0" max={form.holes} placeholder="0" value={form.doubleBogeys} onChange={(e) => set('doubleBogeys', e.target.value)} className={inputClass} />
             </Field>
           </div>
         </div>
