@@ -5,7 +5,6 @@ import { useCourses } from '../hooks/useRounds';
 const defaultForm = {
   date: new Date().toISOString().slice(0, 10),
   course: '',
-  tees: '',
   holes: 18,
   score: '',
   fairways: '',
@@ -45,10 +44,9 @@ export default function AddRound({ onAdd }) {
   function set(field, value) {
     setForm((prev) => {
       const updated = { ...prev, [field]: value };
-      if (field === 'course' || field === 'tees') {
-        const course = field === 'course' ? value : prev.course;
-        const tees = field === 'tees' ? value : prev.tees;
-        const saved = lookupCourse(course, tees);
+      if (field === 'course') {
+        const course = value;
+        const saved = lookupCourse(course);
         if (saved) {
           setAutoFilled(true);
           return { ...updated, courseRating: String(saved.courseRating), slopeRating: String(saved.slopeRating) };
@@ -107,13 +105,12 @@ export default function AddRound({ onAdd }) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    if (form.courseRating !== '' && form.slopeRating !== '' && form.tees.trim()) {
-      saveCourseData(form.course, form.tees, Number(form.courseRating), Number(form.slopeRating));
+    if (form.courseRating !== '' && form.slopeRating !== '') {
+      saveCourseData(form.course, Number(form.courseRating), Number(form.slopeRating));
     }
     onAdd({
       date: form.date,
       course: form.course.trim(),
-      tees: form.tees.trim() || undefined,
       holes: form.holes,
       score: Number(form.score),
       fairways: Number(form.fairways),
@@ -164,14 +161,9 @@ export default function AddRound({ onAdd }) {
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Course Name" error={errors.course}>
-            <input type="text" placeholder="e.g. Pebble Beach" value={form.course} onChange={(e) => set('course', e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Tees" hint="optional">
-            <input type="text" placeholder="e.g. White, Blue" value={form.tees} onChange={(e) => set('tees', e.target.value)} className={inputClass} />
-          </Field>
-        </div>
+        <Field label="Course Name" error={errors.course}>
+          <input type="text" placeholder="e.g. Pebble Beach" value={form.course} onChange={(e) => set('course', e.target.value)} className={inputClass} />
+        </Field>
 
         <div className="grid grid-cols-3 gap-4">
           <Field label="Fairways" hint={`0–${is9 ? 7 : 14}`} error={errors.fairways}>

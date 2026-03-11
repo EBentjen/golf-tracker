@@ -46,18 +46,17 @@ export function useCourses() {
     }
   });
 
-  function saveCourseData(courseName, tees, courseRating, slopeRating) {
-    if (!courseName || !tees) return;
-    const key = `${courseName.trim().toLowerCase()}|${tees.trim().toLowerCase()}`;
+  function saveCourseData(courseName, courseRating, slopeRating) {
+    if (!courseName) return;
+    const key = courseName.trim().toLowerCase();
     const updated = { ...courses, [key]: { courseRating, slopeRating } };
     setCourses(updated);
     localStorage.setItem(COURSES_KEY, JSON.stringify(updated));
   }
 
-  function lookupCourse(courseName, tees) {
-    if (!courseName || !tees) return null;
-    const key = `${courseName.trim().toLowerCase()}|${tees.trim().toLowerCase()}`;
-    return courses[key] ?? null;
+  function lookupCourse(courseName) {
+    if (!courseName) return null;
+    return courses[courseName.trim().toLowerCase()] ?? null;
   }
 
   return { saveCourseData, lookupCourse };
