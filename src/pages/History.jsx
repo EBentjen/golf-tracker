@@ -58,40 +58,72 @@ export default function History({ rounds, onDelete }) {
         </div>
       </div>
 
+      {/* Desktop table */}
       <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-800">
-              {['Date', 'Course', 'Holes', 'Score', 'FWY', 'GIR', 'Putts', ''].map((h) => (
-                <th key={h} className="text-left text-xs font-mono font-medium text-slate-500 uppercase tracking-widest px-4 py-3">{h}</th>
+              {['Date', 'Course', 'H', 'Score', 'FWY', 'GIR', 'Putts', 'Bir', 'Egl', ''].map((h) => (
+                <th key={h} className="text-left text-xs font-mono font-medium text-slate-500 uppercase tracking-widest px-3 py-3">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {sorted.map((r) => (
-              <tr key={r.id} className="border-b border-slate-800/50 hover:bg-slate-800/40 transition-colors">
-                <td className="px-4 py-3 text-slate-400 font-mono text-xs tabular-nums">{r.date}</td>
-                <td className="px-4 py-3 font-medium text-slate-200">{r.course}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full ${(r.holes ?? 18) === 9 ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
-                    {r.holes ?? 18}H
-                  </span>
-                </td>
-                <td className="px-4 py-3"><span className="font-bold text-emerald-400 tabular-nums text-base">{r.score}</span></td>
-                <td className="px-4 py-3 text-slate-400 tabular-nums font-mono">{r.fairways}</td>
-                <td className="px-4 py-3 text-slate-400 tabular-nums font-mono">{r.gir}</td>
-                <td className="px-4 py-3 text-slate-400 tabular-nums font-mono">{r.putts}</td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => handleDelete(r.id)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium font-mono ${confirmId === r.id ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-slate-600 hover:text-red-400 hover:bg-red-500/10'}`}>
-                    {confirmId === r.id ? 'confirm?' : 'del'}
-                  </button>
-                </td>
-              </tr>
+              <>
+                <tr key={r.id} className={`border-b border-slate-800/50 hover:bg-slate-800/40 transition-colors ${r.notes ? 'border-b-0' : ''}`}>
+                  <td className="px-3 py-3 text-slate-400 font-mono text-xs tabular-nums">{r.date}</td>
+                  <td className="px-3 py-3 font-medium text-slate-200">{r.course}</td>
+                  <td className="px-3 py-3">
+                    <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full ${(r.holes ?? 18) === 9 ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                      {r.holes ?? 18}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3"><span className="font-bold text-emerald-400 tabular-nums text-base">{r.score}</span></td>
+                  <td className="px-3 py-3 text-slate-400 tabular-nums font-mono">{r.fairways}</td>
+                  <td className="px-3 py-3 text-slate-400 tabular-nums font-mono">{r.gir}</td>
+                  <td className="px-3 py-3 text-slate-400 tabular-nums font-mono">{r.putts}</td>
+                  <td className="px-3 py-3 tabular-nums font-mono">
+                    {r.birdies != null
+                      ? <span className="text-emerald-400">{r.birdies}</span>
+                      : <span className="text-slate-700">—</span>}
+                  </td>
+                  <td className="px-3 py-3 tabular-nums font-mono">
+                    {r.eagles != null && r.eagles > 0
+                      ? <span className="text-yellow-400">{r.eagles}</span>
+                      : <span className="text-slate-700">—</span>}
+                  </td>
+                  <td className="px-3 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Link
+                        to={`/edit/${r.id}`}
+                        className="text-xs px-2.5 py-1.5 rounded-lg transition-colors font-medium font-mono text-slate-500 hover:text-sky-400 hover:bg-sky-500/10"
+                      >
+                        edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(r.id)}
+                        className={`text-xs px-2.5 py-1.5 rounded-lg transition-colors font-medium font-mono ${confirmId === r.id ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-slate-600 hover:text-red-400 hover:bg-red-500/10'}`}
+                      >
+                        {confirmId === r.id ? 'confirm?' : 'del'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {r.notes && (
+                  <tr key={`${r.id}-notes`} className="border-b border-slate-800/50">
+                    <td colSpan={10} className="px-3 pb-2.5">
+                      <p className="text-xs text-slate-500 font-mono italic">{r.notes}</p>
+                    </td>
+                  </tr>
+                )}
+              </>
             ))}
           </tbody>
         </table>
       </div>
 
+      {/* Mobile cards */}
       <div className="md:hidden space-y-3">
         {sorted.map((r) => (
           <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -107,14 +139,34 @@ export default function History({ rounds, onDelete }) {
                 <span className="text-2xl font-bold text-emerald-400 tabular-nums">{r.score}</span>
               </div>
             </div>
-            <div className="flex gap-4 text-xs font-mono text-slate-500">
+            <div className="flex flex-wrap gap-3 text-xs font-mono text-slate-500 mb-2">
               <span>FWY: <strong className="text-slate-300">{r.fairways}</strong></span>
               <span>GIR: <strong className="text-slate-300">{r.gir}</strong></span>
               <span>Putts: <strong className="text-slate-300">{r.putts}</strong></span>
+              {r.birdies != null && (
+                <span>Bir: <strong className="text-emerald-400">{r.birdies}</strong></span>
+              )}
+              {r.eagles != null && r.eagles > 0 && (
+                <span>Egl: <strong className="text-yellow-400">{r.eagles}</strong></span>
+              )}
             </div>
-            <button onClick={() => handleDelete(r.id)} className={`mt-3 text-xs px-3 py-1.5 rounded-lg transition-colors font-mono font-medium ${confirmId === r.id ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-slate-600 hover:text-red-400'}`}>
-              {confirmId === r.id ? 'confirm delete?' : 'delete'}
-            </button>
+            {r.notes && (
+              <p className="text-xs text-slate-500 font-mono italic mb-2 border-t border-slate-800 pt-2">{r.notes}</p>
+            )}
+            <div className="flex gap-2">
+              <Link
+                to={`/edit/${r.id}`}
+                className="text-xs px-3 py-1.5 rounded-lg transition-colors font-mono font-medium text-slate-500 hover:text-sky-400 hover:bg-sky-500/10"
+              >
+                edit
+              </Link>
+              <button
+                onClick={() => handleDelete(r.id)}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-mono font-medium ${confirmId === r.id ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-slate-600 hover:text-red-400'}`}
+              >
+                {confirmId === r.id ? 'confirm delete?' : 'delete'}
+              </button>
+            </div>
           </div>
         ))}
       </div>

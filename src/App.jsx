@@ -3,12 +3,13 @@ import Sidebar from './components/layout/Sidebar';
 import BottomNav from './components/layout/BottomNav';
 import Dashboard from './pages/Dashboard';
 import AddRound from './pages/AddRound';
+import EditRound from './pages/EditRound';
 import History from './pages/History';
 import Targets from './pages/Targets';
 import { useRounds, useTargets } from './hooks/useRounds';
 
 export default function App() {
-  const { rounds, addRound, deleteRound } = useRounds();
+  const { rounds, addRound, editRound, deleteRound } = useRounds();
   const { targets, saveTargets } = useTargets();
 
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard rounds={rounds} targets={targets} />} />
             <Route path="/add" element={<AddRound onAdd={addRound} />} />
+            <Route path="/edit/:id" element={<EditRound rounds={rounds} onEdit={editRound} />} />
             <Route path="/history" element={<History rounds={rounds} onDelete={deleteRound} />} />
             <Route path="/targets" element={<Targets targets={targets} onSave={saveTargets} />} />
           </Routes>

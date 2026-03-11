@@ -15,7 +15,26 @@ const defaultForm = {
   doubleBogeys: '',
   courseRating: '',
   slopeRating: '',
+  notes: '',
 };
+
+function roundToForm(round) {
+  return {
+    date: round.date,
+    course: round.course,
+    holes: round.holes ?? 18,
+    score: String(round.score),
+    fairways: String(round.fairways),
+    gir: String(round.gir),
+    putts: String(round.putts),
+    birdies: round.birdies != null ? String(round.birdies) : '',
+    eagles: round.eagles != null ? String(round.eagles) : '',
+    doubleBogeys: round.doubleBogeys != null ? String(round.doubleBogeys) : '',
+    courseRating: round.courseRating != null ? String(round.courseRating) : '',
+    slopeRating: round.slopeRating != null ? String(round.slopeRating) : '',
+    notes: round.notes ?? '',
+  };
+}
 
 function Field({ label, hint, error, children }) {
   return (
@@ -33,12 +52,13 @@ function Field({ label, hint, error, children }) {
 const inputClass =
   'w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition placeholder:text-slate-600';
 
-export default function AddRound({ onAdd }) {
-  const [form, setForm] = useState(defaultForm);
+export default function AddRound({ onAdd, onEdit, initialRound }) {
+  const isEdit = !!initialRound;
+  const [form, setForm] = useState(() => initialRound ? roundToForm(initialRound) : defaultForm);
   const [errors, setErrors] = useState({});
   const [autoFilled, setAutoFilled] = useState(false);
   const navigate = useNavigate();
-  const { saveCourseData, lookupCourse } = useCourses();
+  const { saveCourseData, lookupCourse, courseNames } = useCourses();
 
   const is9 = form.holes === 9;
 
@@ -46,8 +66,7 @@ export default function AddRound({ onAdd }) {
     setForm((prev) => {
       const updated = { ...prev, [field]: value };
       if (field === 'course') {
-        const course = value;
-        const saved = lookupCourse(course);
+        const saved = lookupCourse(value);
         if (saved) {
           setAutoFilled(true);
           return { ...updated, courseRating: String(saved.courseRating), slopeRating: String(saved.slopeRating) };
@@ -113,7 +132,7 @@ export default function AddRound({ onAdd }) {
     if (form.courseRating !== '' && form.slopeRating !== '') {
       saveCourseData(form.course, Number(form.courseRating), Number(form.slopeRating));
     }
-    onAdd({
+    const data = {
       date: form.date,
       course: form.course.trim(),
       holes: form.holes,
@@ -126,14 +145,24 @@ export default function AddRound({ onAdd }) {
       ...(form.doubleBogeys !== '' && { doubleBogeys: Number(form.doubleBogeys) }),
       ...(form.courseRating !== '' && { courseRating: Number(form.courseRating) }),
       ...(form.slopeRating !== '' && { slopeRating: Number(form.slopeRating) }),
-    });
-    navigate('/');
+      ...(form.notes.trim() !== '' && { notes: form.notes.trim() }),
+    };
+    if (isEdit) {
+      onEdit(data);
+    } else {
+      onAdd(data);
+      navigate('/');
+    }
   }
 
   return (
     <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-1">Add Round</h1>
-      <p className="text-xs font-mono text-slate-500 mb-6">Log a new round to your tracker.</p>
+      <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-1">
+        {isEdit ? 'Edit Round' : 'Add Round'}
+      </h1>
+      <p className="text-xs font-mono text-slate-500 mb-6">
+        {isEdit ? 'Update the details for this round.' : 'Log a new round to your tracker.'}
+      </p>
 
       <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
 
@@ -168,7 +197,22 @@ export default function AddRound({ onAdd }) {
         </div>
 
         <Field label="Course Name" error={errors.course}>
-          <input type="text" placeholder="e.g. Pebble Beach" value={form.course} onChange={(e) => set('course', e.target.value)} className={inputClass} />
+          <input
+            type="text"
+            list="course-suggestions"
+            placeholder="e.g. Pebble Beach"
+            value={form.course}
+            onChange={(e) => set('course', e.target.value)}
+            className={inputClass}
+            autoComplete="off"
+          />
+          {courseNames.length > 0 && (
+            <datalist id="course-suggestions">
+              {courseNames.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
+          )}
         </Field>
 
         <div className="grid grid-cols-3 gap-4">
@@ -218,9 +262,32 @@ export default function AddRound({ onAdd }) {
           </div>
         </div>
 
-        <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm py-2.5 rounded-lg transition-colors">
-          Save Round
-        </button>
+        {/* Notes */}
+        <div>
+          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-3">Notes · optional</p>
+          <textarea
+            rows={3}
+            placeholder="Weather, course conditions, memorable holes…"
+            value={form.notes}
+            onChange={(e) => set('notes', e.target.value)}
+            className={`${inputClass} resize-none`}
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button type="submit" className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm py-2.5 rounded-lg transition-colors">
+            {isEdit ? 'Save Changes' : 'Save Round'}
+          </button>
+          {isEdit && (
+            <button
+              type="button"
+              onClick={() => navigate('/history')}
+              className="px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-mono py-2.5 rounded-lg transition-colors border border-slate-700"
+            >
+              cancel
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );

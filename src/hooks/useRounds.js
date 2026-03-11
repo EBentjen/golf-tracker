@@ -29,11 +29,15 @@ export function useRounds() {
     ]);
   }
 
+  function editRound(id, data) {
+    setRounds((prev) => prev.map((r) => r.id === id ? { ...r, ...data } : r));
+  }
+
   function deleteRound(id) {
     setRounds((prev) => prev.filter((r) => r.id !== id));
   }
 
-  return { rounds, addRound, deleteRound };
+  return { rounds, addRound, editRound, deleteRound };
 }
 
 export function useCourses() {
@@ -49,7 +53,7 @@ export function useCourses() {
   function saveCourseData(courseName, courseRating, slopeRating) {
     if (!courseName) return;
     const key = courseName.trim().toLowerCase();
-    const updated = { ...courses, [key]: { courseRating, slopeRating } };
+    const updated = { ...courses, [key]: { courseRating, slopeRating, name: courseName.trim() } };
     setCourses(updated);
     localStorage.setItem(COURSES_KEY, JSON.stringify(updated));
   }
@@ -59,7 +63,12 @@ export function useCourses() {
     return courses[courseName.trim().toLowerCase()] ?? null;
   }
 
-  return { saveCourseData, lookupCourse };
+  const courseNames = Object.values(courses)
+    .map((c) => c.name || null)
+    .filter(Boolean)
+    .sort();
+
+  return { saveCourseData, lookupCourse, courseNames };
 }
 
 export function useTargets() {

@@ -153,6 +153,13 @@ function RoundModal({ round, onClose }) {
           )}
         </div>
 
+        {round.notes && (
+          <div className="px-5 pb-3">
+            <p className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-1">Notes</p>
+            <p className="text-xs text-slate-400 font-mono italic">{round.notes}</p>
+          </div>
+        )}
+
         <div className="px-5 pb-5">
           <button
             onClick={onClose}
