@@ -195,6 +195,7 @@ function applyFilter(rounds, filter) {
 export default function Dashboard({ rounds, targets }) {
   const [selectedRound, setSelectedRound] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [statTab, setStatTab] = useState('Fairways');
 
   if (!rounds.length) return <EmptyState />;
 
@@ -390,8 +391,49 @@ export default function Dashboard({ rounds, targets }) {
         </ChartCard>
       )}
 
-      {/* Stat trends */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Stat trends — tabbed on mobile, grid on desktop */}
+      <div className="md:hidden">
+        {(() => {
+          const tabs = [
+            { key: 'Fairways', color: '#38bdf8', domain: [0, 14], target: targets?.fairways },
+            { key: 'GIR',      color: '#a78bfa', domain: [0, 18], target: targets?.gir },
+            { key: 'Putts',    color: '#fb923c', domain: ['auto','auto'], target: targets?.putts },
+          ];
+          const active = tabs.find((t) => t.key === statTab);
+          return (
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+              <div className="flex gap-1.5 mb-3">
+                {tabs.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setStatTab(t.key)}
+                    className={`px-3 py-1 text-xs font-mono font-medium rounded-md border transition-colors ${
+                      statTab === t.key
+                        ? 'border-transparent text-slate-950'
+                        : 'bg-slate-800 border-slate-700 text-slate-400'
+                    }`}
+                    style={statTab === t.key ? { backgroundColor: t.color } : {}}
+                  >
+                    {t.key}
+                    {t.target ? <span className="ml-1 opacity-70">· {t.target}</span> : null}
+                  </button>
+                ))}
+              </div>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={statData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
+                  <XAxis dataKey="date" tick={{ ...CS.tick, fontSize: 9 }} />
+                  <YAxis tick={CS.tick} domain={active.domain} />
+                  <Tooltip {...CS.tooltip} />
+                  {active.target && <ReferenceLine y={active.target} stroke="#fbbf24" strokeDasharray="4 3" strokeWidth={1.5} />}
+                  <Line type="monotone" dataKey={active.key} stroke={active.color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          );
+        })()}
+      </div>
+      <div className="hidden md:grid grid-cols-3 gap-4">
         <ChartCard title="Fairways" badge={targets?.fairways ? `tgt ${targets.fairways}` : null} height={160}>
           <LineChart data={statData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
@@ -402,7 +444,6 @@ export default function Dashboard({ rounds, targets }) {
             <Line type="monotone" dataKey="Fairways" stroke="#38bdf8" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </LineChart>
         </ChartCard>
-
         <ChartCard title="GIR" badge={targets?.gir ? `tgt ${targets.gir}` : null} height={160}>
           <LineChart data={statData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
@@ -413,7 +454,6 @@ export default function Dashboard({ rounds, targets }) {
             <Line type="monotone" dataKey="GIR" stroke="#a78bfa" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </LineChart>
         </ChartCard>
-
         <ChartCard title="Putts" badge={targets?.putts ? `tgt ${targets.putts}` : null} height={160}>
           <LineChart data={statData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
