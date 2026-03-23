@@ -38,7 +38,7 @@ function roundToForm(round) {
 
 function Field({ label, hint, error, children }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1">
       <label className="text-sm font-medium text-slate-300">
         {label}
         {hint && <span className="ml-1 text-slate-500 font-normal text-xs font-mono">({hint})</span>}
@@ -50,7 +50,7 @@ function Field({ label, hint, error, children }) {
 }
 
 const inputClass =
-  'w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition placeholder:text-slate-600';
+  'w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition placeholder:text-slate-600';
 
 export default function AddRound({ onAdd, onEdit, initialRound }) {
   const isEdit = !!initialRound;
@@ -156,15 +156,15 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
   }
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-1">
+    <div className="p-4 max-w-lg mx-auto">
+      <h1 className="text-xl font-bold text-slate-100 tracking-tight mb-0.5">
         {isEdit ? 'Edit Round' : 'Add Round'}
       </h1>
-      <p className="text-xs font-mono text-slate-500 mb-6">
+      <p className="text-xs font-mono text-slate-500 mb-4">
         {isEdit ? 'Update the details for this round.' : 'Log a new round to your tracker.'}
       </p>
 
-      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
 
         {/* Holes toggle */}
         <div className="flex flex-col gap-1.5">
@@ -175,7 +175,7 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
                 key={h}
                 type="button"
                 onClick={() => set('holes', h)}
-                className={`px-6 py-2 text-sm font-mono font-medium transition-colors ${
+                className={`px-5 py-1.5 text-sm font-mono font-medium transition-colors ${
                   form.holes === h
                     ? 'bg-emerald-500 text-slate-950'
                     : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
@@ -187,7 +187,7 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <Field label="Date" error={errors.date}>
             <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} className={inputClass} />
           </Field>
@@ -215,7 +215,7 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
           )}
         </Field>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           <Field label="Fairways" hint={`0–${is9 ? 7 : 14}`} error={errors.fairways}>
             <input type="number" placeholder={is9 ? '4' : '8'} value={form.fairways} onChange={(e) => set('fairways', e.target.value)} className={inputClass} />
           </Field>
@@ -229,8 +229,8 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
 
         {/* Scoring */}
         <div>
-          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-3">Scoring · optional</p>
-          <div className="grid grid-cols-3 gap-4">
+          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-2">Scoring · optional</p>
+          <div className="grid grid-cols-3 gap-3">
             <Field label="Birdies" hint={`0–${form.holes}`} error={errors.birdies}>
               <input type="number" min="0" max={form.holes} placeholder="0" value={form.birdies} onChange={(e) => set('birdies', e.target.value)} className={inputClass} />
             </Field>
@@ -245,14 +245,14 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
 
         {/* Handicap data */}
         <div>
-          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-3">
+          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-2">
             Handicap Data{' '}
             {autoFilled
               ? <span className="normal-case text-emerald-400">· auto-filled</span>
               : <span className="normal-case text-slate-600">· optional</span>
             }
           </p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <Field label="Course Rating" hint={is9 ? 'e.g. 35.2' : 'e.g. 72.1'} error={errors.courseRating}>
               <input type="number" step="0.1" placeholder={is9 ? '35.2' : '72.1'} value={form.courseRating} onChange={(e) => set('courseRating', e.target.value)} className={inputClass} />
             </Field>
@@ -264,9 +264,9 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
 
         {/* Notes */}
         <div>
-          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-3">Notes · optional</p>
+          <p className="text-xs font-mono font-medium text-slate-500 uppercase tracking-widest mb-2">Notes · optional</p>
           <textarea
-            rows={3}
+            rows={2}
             placeholder="Weather, course conditions, memorable holes…"
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
