@@ -38,8 +38,8 @@ function roundToForm(round) {
 
 function Field({ label, hint, error, children }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-slate-300">
+    <div className="flex flex-col gap-1 min-w-0">
+      <label className="text-sm font-medium text-slate-300 leading-tight">
         {label}
         {hint && <span className="ml-1 text-slate-500 font-normal text-xs font-mono">({hint})</span>}
       </label>
@@ -237,7 +237,7 @@ export default function AddRound({ onAdd, onEdit, initialRound }) {
             <Field label="Eagles" hint="≤ birdies" error={errors.eagles}>
               <input type="number" min="0" max={form.holes} placeholder="0" value={form.eagles} onChange={(e) => set('eagles', e.target.value)} className={inputClass} />
             </Field>
-            <Field label="Dbl Bogeys+" hint={`0–${form.holes}`} error={errors.doubleBogeys}>
+            <Field label="Dbl Bog+" hint={`0–${form.holes}`} error={errors.doubleBogeys}>
               <input type="number" min="0" max={form.holes} placeholder="0" value={form.doubleBogeys} onChange={(e) => set('doubleBogeys', e.target.value)} className={inputClass} />
             </Field>
           </div>
