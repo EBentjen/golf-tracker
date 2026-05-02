@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 export const STORAGE_KEY = 'golf_rounds';
 export const TARGETS_KEY = 'golf_targets';
 export const COURSES_KEY = 'golf_courses';
+export const PRACTICE_KEY = 'golf_practice_sessions';
 
 const DEFAULT_TARGETS = { score: 85, fairways: 9, gir: 9, putts: 30 };
 
@@ -65,6 +66,44 @@ export function useCourses() {
   }
 
   return { saveCourseData, lookupCourse };
+}
+
+function loadPracticeSessions() {
+  try {
+    const raw = localStorage.getItem(PRACTICE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function usePracticeSessions() {
+  const [sessions, setSessions] = useState(loadPracticeSessions);
+
+  useEffect(() => {
+    localStorage.setItem(PRACTICE_KEY, JSON.stringify(sessions));
+  }, [sessions]);
+
+  function addPracticeSession(session) {
+    setSessions((prev) => [
+      {
+        ...session,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      },
+      ...prev,
+    ]);
+  }
+
+  function deletePracticeSession(id) {
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function replacePracticeSessions(nextSessions) {
+    setSessions(Array.isArray(nextSessions) ? nextSessions : []);
+  }
+
+  return { sessions, addPracticeSession, deletePracticeSession, replacePracticeSessions };
 }
 
 export function useTargets() {

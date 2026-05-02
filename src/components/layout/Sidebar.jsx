@@ -4,6 +4,8 @@ const links = [
   { to: '/', label: 'Dashboard', icon: '⬡' },
   { to: '/add', label: 'Add Round', icon: '+' },
   { to: '/history', label: 'History', icon: '≡' },
+  { to: '/practice', label: 'Practice', icon: '◇' },
+  { to: '/swing', label: 'Swing', icon: '◌' },
   { to: '/targets', label: 'Goals', icon: '◎' },
   { to: '/backup', label: 'Backup', icon: '⇅' },
 ];

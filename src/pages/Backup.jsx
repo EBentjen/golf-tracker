@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { COURSES_KEY } from '../hooks/useRounds';
+import { COURSES_KEY, PRACTICE_KEY } from '../hooks/useRounds';
 
 const BACKUP_VERSION = 1;
 
@@ -20,6 +20,7 @@ function buildBackup(rounds, targets) {
     rounds,
     targets,
     courses: readJson(COURSES_KEY, {}),
+    practiceSessions: readJson(PRACTICE_KEY, []),
   };
 }
 
@@ -43,6 +44,7 @@ function validateBackup(data) {
   if (!Array.isArray(data.rounds)) return 'The backup is missing round history.';
   if (!data.targets || typeof data.targets !== 'object') return 'The backup is missing goals.';
   if (data.courses != null && typeof data.courses !== 'object') return 'The saved course data is not readable.';
+  if (data.practiceSessions != null && !Array.isArray(data.practiceSessions)) return 'The practice log is not readable.';
   return null;
 }
 
@@ -59,6 +61,7 @@ export default function Backup({ rounds, targets, onImport }) {
   const fileRef = useRef(null);
   const [status, setStatus] = useState(null);
   const savedCourses = readJson(COURSES_KEY, {});
+  const practiceSessions = readJson(PRACTICE_KEY, []);
   const courseCount = Object.keys(savedCourses).length;
 
   function handleExport() {
@@ -83,6 +86,7 @@ export default function Backup({ rounds, targets, onImport }) {
           rounds: data.rounds,
           targets: data.targets,
           courses: data.courses ?? {},
+          practiceSessions: data.practiceSessions ?? [],
         });
         setStatus({
           type: 'success',
@@ -105,10 +109,11 @@ export default function Backup({ rounds, targets, onImport }) {
         Save or restore your round history, goals, and saved course ratings.
       </p>
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <SummaryCard label="Rounds" value={rounds.length} />
         <SummaryCard label="Goals" value="4" />
         <SummaryCard label="Courses" value={courseCount} />
+        <SummaryCard label="Practice" value={practiceSessions.length} />
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
