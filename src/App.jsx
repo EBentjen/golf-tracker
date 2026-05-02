@@ -32,7 +32,7 @@ export default function App() {
     <BrowserRouter>
       <div className="flex min-h-screen bg-slate-950">
         <Sidebar />
-        <main className="flex-1 pb-20 md:pb-0 overflow-y-auto">
+        <main className="flex-1 pb-36 md:pb-0 overflow-y-auto">
           <Routes>
             <Route path="/" element={<Dashboard rounds={rounds} targets={targets} />} />
             <Route path="/add" element={<AddRound onAdd={addRound} />} />
