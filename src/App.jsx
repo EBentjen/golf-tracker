@@ -5,11 +5,18 @@ import Dashboard from './pages/Dashboard';
 import AddRound from './pages/AddRound';
 import History from './pages/History';
 import Targets from './pages/Targets';
-import { useRounds, useTargets } from './hooks/useRounds';
+import Backup from './pages/Backup';
+import { COURSES_KEY, useRounds, useTargets } from './hooks/useRounds';
 
 export default function App() {
-  const { rounds, addRound, deleteRound } = useRounds();
+  const { rounds, addRound, deleteRound, replaceRounds } = useRounds();
   const { targets, saveTargets } = useTargets();
+
+  function importBackup({ rounds: importedRounds, targets: importedTargets, courses }) {
+    replaceRounds(importedRounds);
+    saveTargets(importedTargets);
+    localStorage.setItem(COURSES_KEY, JSON.stringify(courses ?? {}));
+  }
 
   return (
     <BrowserRouter>
@@ -21,6 +28,7 @@ export default function App() {
             <Route path="/add" element={<AddRound onAdd={addRound} />} />
             <Route path="/history" element={<History rounds={rounds} onDelete={deleteRound} />} />
             <Route path="/targets" element={<Targets targets={targets} onSave={saveTargets} />} />
+            <Route path="/backup" element={<Backup rounds={rounds} targets={targets} onImport={importBackup} />} />
           </Routes>
         </main>
         <BottomNav />

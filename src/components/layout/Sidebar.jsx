@@ -5,6 +5,7 @@ const links = [
   { to: '/add', label: 'Add Round', icon: '+' },
   { to: '/history', label: 'History', icon: '≡' },
   { to: '/targets', label: 'Goals', icon: '◎' },
+  { to: '/backup', label: 'Backup', icon: '⇅' },
 ];
 
 export default function Sidebar() {

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
-const STORAGE_KEY = 'golf_rounds';
-const TARGETS_KEY = 'golf_targets';
-const COURSES_KEY = 'golf_courses';
+export const STORAGE_KEY = 'golf_rounds';
+export const TARGETS_KEY = 'golf_targets';
+export const COURSES_KEY = 'golf_courses';
 
 const DEFAULT_TARGETS = { score: 85, fairways: 9, gir: 9, putts: 30 };
 
@@ -33,7 +33,11 @@ export function useRounds() {
     setRounds((prev) => prev.filter((r) => r.id !== id));
   }
 
-  return { rounds, addRound, deleteRound };
+  function replaceRounds(nextRounds) {
+    setRounds(Array.isArray(nextRounds) ? nextRounds : []);
+  }
+
+  return { rounds, addRound, deleteRound, replaceRounds };
 }
 
 export function useCourses() {
