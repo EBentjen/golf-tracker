@@ -9,7 +9,7 @@ const primaryLinks = [
 
 const menuLinks = [
   { to: '/history', label: 'Round History', description: 'Scores and past rounds', icon: '≡' },
-  { to: '/swing', label: 'Swing Analyzer', description: 'Upload video for feedback', icon: '◌' },
+  { to: '/swing', label: 'Swing Review', description: 'Video checkpoints and drills', icon: '◌' },
   { to: '/targets', label: 'Goals', description: 'Scoring targets', icon: '◎' },
   { to: '/backup', label: 'Backup', description: 'Export and import data', icon: '⇅' },
 ];
