@@ -99,7 +99,7 @@ export default function SwingAnalyzer() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileRef = useRef(null);
 
-  const canAnalyze = useMemo(() => frames.length > 0 && question.trim(), [frames, question]);
+  const canAnalyze = useMemo(() => frames.length > 0, [frames]);
 
   async function handleVideo(file) {
     if (!file) return;
@@ -125,7 +125,7 @@ export default function SwingAnalyzer() {
     e.preventDefault();
     if (!canAnalyze) return;
 
-    const userMessage = question.trim();
+    const userMessage = question.trim() || starterPrompt;
     const nextMessages = [...messages, { role: 'user', content: userMessage }];
     setMessages(nextMessages);
     setQuestion('');
