@@ -33,8 +33,27 @@ function Field({ label, hint, error, children }) {
 const inputClass =
   'w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition placeholder:text-slate-600';
 
-export default function AddRound({ onAdd }) {
-  const [form, setForm] = useState(defaultForm);
+function roundToForm(round) {
+  if (!round) return defaultForm;
+  return {
+    date: round.date ?? defaultForm.date,
+    course: round.course ?? '',
+    tees: round.tees ?? '',
+    holes: round.holes ?? 18,
+    score: round.score != null ? String(round.score) : '',
+    fairways: round.fairways != null ? String(round.fairways) : '',
+    gir: round.gir != null ? String(round.gir) : '',
+    putts: round.putts != null ? String(round.putts) : '',
+    birdies: round.birdies != null ? String(round.birdies) : '',
+    eagles: round.eagles != null ? String(round.eagles) : '',
+    courseRating: round.courseRating != null ? String(round.courseRating) : '',
+    slopeRating: round.slopeRating != null ? String(round.slopeRating) : '',
+  };
+}
+
+export default function AddRound({ round, onAdd, onUpdate }) {
+  const isEditing = Boolean(round);
+  const [form, setForm] = useState(() => roundToForm(round));
   const [errors, setErrors] = useState({});
   const [autoFilled, setAutoFilled] = useState(false);
   const navigate = useNavigate();
@@ -110,7 +129,7 @@ export default function AddRound({ onAdd }) {
     if (form.courseRating !== '' && form.slopeRating !== '' && form.tees.trim()) {
       saveCourseData(form.course, form.tees, Number(form.courseRating), Number(form.slopeRating));
     }
-    onAdd({
+    const payload = {
       date: form.date,
       course: form.course.trim(),
       tees: form.tees.trim() || undefined,
@@ -123,14 +142,23 @@ export default function AddRound({ onAdd }) {
       ...(form.eagles !== '' && { eagles: Number(form.eagles) }),
       ...(form.courseRating !== '' && { courseRating: Number(form.courseRating) }),
       ...(form.slopeRating !== '' && { slopeRating: Number(form.slopeRating) }),
-    });
-    navigate('/');
+    };
+
+    if (isEditing) {
+      onUpdate(round.id, payload);
+      navigate('/history');
+    } else {
+      onAdd(payload);
+      navigate('/');
+    }
   }
 
   return (
     <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-1">Add Round</h1>
-      <p className="text-xs font-mono text-slate-500 mb-6">Log a new round to your tracker.</p>
+      <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-1">{isEditing ? 'Edit Round' : 'Add Round'}</h1>
+      <p className="text-xs font-mono text-slate-500 mb-6">
+        {isEditing ? 'Update a saved round without deleting your history.' : 'Log a new round to your tracker.'}
+      </p>
 
       <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
 
@@ -218,7 +246,7 @@ export default function AddRound({ onAdd }) {
         </div>
 
         <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm py-2.5 rounded-lg transition-colors">
-          Save Round
+          {isEditing ? 'Update Round' : 'Save Round'}
         </button>
       </form>
     </div>
