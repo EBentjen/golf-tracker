@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route, useParams } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import BottomNav from './components/layout/BottomNav';
 import Dashboard from './pages/Dashboard';
@@ -11,7 +11,7 @@ import SwingAnalyzer from './pages/SwingAnalyzer';
 import { COURSES_KEY, PRACTICE_KEY, usePracticeSessions, useRounds, useTargets } from './hooks/useRounds';
 
 export default function App() {
-  const { rounds, addRound, deleteRound, replaceRounds } = useRounds();
+  const { rounds, addRound, updateRound, deleteRound, replaceRounds } = useRounds();
   const { targets, saveTargets } = useTargets();
   const {
     sessions,
@@ -28,6 +28,13 @@ export default function App() {
     localStorage.setItem(PRACTICE_KEY, JSON.stringify(practiceSessions ?? []));
   }
 
+  function EditRoundRoute() {
+    const { id } = useParams();
+    const round = rounds.find((item) => item.id === id);
+    if (!round) return <Navigate to="/history" replace />;
+    return <AddRound round={round} onAdd={addRound} onUpdate={updateRound} />;
+  }
+
   return (
     <BrowserRouter>
       <div className="flex min-h-screen bg-slate-950">
@@ -36,6 +43,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard rounds={rounds} targets={targets} />} />
             <Route path="/add" element={<AddRound onAdd={addRound} />} />
+            <Route path="/edit/:id" element={<EditRoundRoute />} />
             <Route path="/history" element={<History rounds={rounds} onDelete={deleteRound} />} />
             <Route path="/practice" element={<Practice sessions={sessions} onAdd={addPracticeSession} onDelete={deletePracticeSession} />} />
             <Route path="/swing" element={<SwingAnalyzer />} />
