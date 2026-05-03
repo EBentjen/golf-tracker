@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { COURSES_KEY, PRACTICE_KEY } from '../hooks/useRounds';
 
 const BACKUP_VERSION = 1;
+const LAST_BACKUP_KEY = 'golf_last_backup_exported_at';
 
 function readJson(key, fallback) {
   try {
@@ -57,16 +58,36 @@ function SummaryCard({ label, value }) {
   );
 }
 
+function daysSince(isoDate) {
+  if (!isoDate) return null;
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return null;
+  return Math.floor((Date.now() - date.getTime()) / 86400000);
+}
+
+function formatBackupDate(isoDate) {
+  if (!isoDate) return 'Never';
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return 'Unknown';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 export default function Backup({ rounds, targets, onImport }) {
   const fileRef = useRef(null);
   const [status, setStatus] = useState(null);
+  const [lastBackupAt, setLastBackupAt] = useState(() => localStorage.getItem(LAST_BACKUP_KEY));
   const savedCourses = readJson(COURSES_KEY, {});
   const practiceSessions = readJson(PRACTICE_KEY, []);
   const courseCount = Object.keys(savedCourses).length;
+  const backupAge = daysSince(lastBackupAt);
+  const backupIsDue = backupAge == null || backupAge >= 14;
 
   function handleExport() {
     downloadBackup(buildBackup(rounds, targets));
-    setStatus({ type: 'success', text: 'Backup downloaded.' });
+    const exportedAt = new Date().toISOString();
+    localStorage.setItem(LAST_BACKUP_KEY, exportedAt);
+    setLastBackupAt(exportedAt);
+    setStatus({ type: 'success', text: 'Backup downloaded. Last backup date updated.' });
   }
 
   function handleImport(file) {
@@ -108,6 +129,23 @@ export default function Backup({ rounds, targets, onImport }) {
       <p className="text-sm text-slate-500 mb-6 font-mono">
         Save or restore your round history, goals, and saved course ratings.
       </p>
+
+      <div className={`mb-6 rounded-xl border px-4 py-3 ${
+        backupIsDue ? 'border-amber-500/30 bg-amber-500/10' : 'border-emerald-500/30 bg-emerald-500/10'
+      }`}>
+        <p className={`text-xs font-mono font-medium uppercase tracking-widest ${backupIsDue ? 'text-amber-400' : 'text-emerald-400'}`}>
+          {backupIsDue ? 'Backup Reminder' : 'Backup Current'}
+        </p>
+        <p className="text-sm text-slate-300 mt-1">
+          Last export: {formatBackupDate(lastBackupAt)}
+          {backupAge != null ? ` (${backupAge} day${backupAge === 1 ? '' : 's'} ago)` : ''}.
+        </p>
+        {backupIsDue && (
+          <p className="text-xs text-slate-500 mt-1 font-mono">
+            Export a backup after adding important rounds or before bigger app changes.
+          </p>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <SummaryCard label="Rounds" value={rounds.length} />
