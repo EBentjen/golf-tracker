@@ -82,6 +82,12 @@ export default function History({ rounds, onDelete }) {
                 <td className="px-4 py-3 text-slate-400 tabular-nums font-mono">{r.gir}</td>
                 <td className="px-4 py-3 text-slate-400 tabular-nums font-mono">{r.putts}</td>
                 <td className="px-4 py-3 text-right">
+                  <Link
+                    to={`/edit/${r.id}`}
+                    className="text-xs px-3 py-1.5 rounded-lg transition-colors font-medium font-mono text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 mr-2"
+                  >
+                    edit
+                  </Link>
                   <button onClick={() => handleDelete(r.id)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium font-mono ${confirmId === r.id ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-slate-600 hover:text-red-400 hover:bg-red-500/10'}`}>
                     {confirmId === r.id ? 'confirm?' : 'del'}
                   </button>
@@ -112,9 +118,14 @@ export default function History({ rounds, onDelete }) {
               <span>GIR: <strong className="text-slate-300">{r.gir}</strong></span>
               <span>Putts: <strong className="text-slate-300">{r.putts}</strong></span>
             </div>
-            <button onClick={() => handleDelete(r.id)} className={`mt-3 text-xs px-3 py-1.5 rounded-lg transition-colors font-mono font-medium ${confirmId === r.id ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-slate-600 hover:text-red-400'}`}>
-              {confirmId === r.id ? 'confirm delete?' : 'delete'}
-            </button>
+            <div className="mt-3 flex items-center gap-3">
+              <Link to={`/edit/${r.id}`} className="text-xs px-3 py-1.5 rounded-lg transition-colors font-mono font-medium text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10">
+                edit
+              </Link>
+              <button onClick={() => handleDelete(r.id)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-mono font-medium ${confirmId === r.id ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-slate-600 hover:text-red-400'}`}>
+                {confirmId === r.id ? 'confirm delete?' : 'delete'}
+              </button>
+            </div>
           </div>
         ))}
       </div>
