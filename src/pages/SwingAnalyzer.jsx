@@ -96,6 +96,7 @@ export default function SwingAnalyzer() {
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileRef = useRef(null);
 
   const canAnalyze = useMemo(() => frames.length > 0 && question.trim(), [frames, question]);
@@ -106,6 +107,7 @@ export default function SwingAnalyzer() {
     setStatus('Reading swing video...');
     setFrames([]);
     setMessages([]);
+    setIsAnalyzing(false);
     if (videoUrl) URL.revokeObjectURL(videoUrl);
     setVideoUrl(URL.createObjectURL(file));
 
@@ -129,6 +131,7 @@ export default function SwingAnalyzer() {
     setQuestion('');
     setError('');
     setStatus('Coach is reviewing the swing...');
+    setIsAnalyzing(true);
 
     try {
       const response = await fetch('/api/analyze-swing', {
@@ -149,6 +152,8 @@ export default function SwingAnalyzer() {
     } catch (nextError) {
       setError(nextError.message);
       setStatus('');
+    } finally {
+      setIsAnalyzing(false);
     }
   }
 
@@ -252,10 +257,10 @@ export default function SwingAnalyzer() {
             />
             <button
               type="submit"
-              disabled={!canAnalyze || Boolean(status)}
+              disabled={!canAnalyze || isAnalyzing}
               className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 font-bold text-sm py-2.5 rounded-lg transition-colors"
             >
-              Analyze Swing
+              {isAnalyzing ? 'Analyzing Swing...' : 'Analyze Swing'}
             </button>
           </form>
         </section>
