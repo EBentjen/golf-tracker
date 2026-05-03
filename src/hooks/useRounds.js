@@ -34,11 +34,17 @@ export function useRounds() {
     setRounds((prev) => prev.filter((r) => r.id !== id));
   }
 
+  function updateRound(id, nextRound) {
+    setRounds((prev) => prev.map((round) => (
+      round.id === id ? { ...nextRound, id } : round
+    )));
+  }
+
   function replaceRounds(nextRounds) {
     setRounds(Array.isArray(nextRounds) ? nextRounds : []);
   }
 
-  return { rounds, addRound, deleteRound, replaceRounds };
+  return { rounds, addRound, updateRound, deleteRound, replaceRounds };
 }
 
 export function useCourses() {
