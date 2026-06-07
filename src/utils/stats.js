@@ -81,12 +81,22 @@ export function calcAvgScore(rounds) {
 
 export function calcBestRound(rounds) {
   if (!rounds.length) return null;
-  return rounds.reduce((best, r) => (r.score < best.score ? r : best));
+  return rounds
+    .map((round) => {
+      const normalized = normalizeRound(round);
+      return { ...round, score: normalized.score, rawScore: round.score };
+    })
+    .reduce((best, round) => (round.score < best.score ? round : best));
 }
 
 export function calcWorstRound(rounds) {
   if (!rounds.length) return null;
-  return rounds.reduce((worst, r) => (r.score > worst.score ? r : worst));
+  return rounds
+    .map((round) => {
+      const normalized = normalizeRound(round);
+      return { ...round, score: normalized.score, rawScore: round.score };
+    })
+    .reduce((worst, round) => (round.score > worst.score ? round : worst));
 }
 
 export function calcAvgFairways(rounds) {
