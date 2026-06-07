@@ -131,7 +131,7 @@ export default function Practice({ sessions, onAdd, onDelete }) {
         <p className="text-sm text-slate-500 font-mono">Generate focused drills and log the work.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatTile label="Sessions" value={sessions.length} sub={`${stats.weekSessions} this week`} />
         <StatTile label="Goals Met" value={stats.goalsMet} sub={stats.scoredCount ? `${stats.goalRate}% success rate` : 'start scoring'} />
         <StatTile label="Most Practiced" value={stats.topArea?.count ? stats.topArea.label : '-'} sub={stats.topArea?.count ? `${stats.topArea.count} sessions` : 'start logging'} />

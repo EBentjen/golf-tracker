@@ -42,7 +42,7 @@ export default function Targets({ targets, onSave }) {
           <input type="number" min="50" max="200" value={form.score} onChange={(e) => set('score', e.target.value)} className={inputClass} />
         </Field>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label="Fairways" hint="out of 14">
             <input type="number" min="0" max="14" value={form.fairways} onChange={(e) => set('fairways', e.target.value)} className={inputClass} />
           </Field>

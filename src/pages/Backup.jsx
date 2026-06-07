@@ -109,9 +109,13 @@ export default function Backup({ rounds, targets, onImport }) {
           courses: data.courses ?? {},
           practiceSessions: data.practiceSessions ?? [],
         });
+        if (data.exportedAt) {
+          localStorage.setItem(LAST_BACKUP_KEY, data.exportedAt);
+          setLastBackupAt(data.exportedAt);
+        }
         setStatus({
           type: 'success',
-          text: `Imported ${data.rounds.length} round${data.rounds.length === 1 ? '' : 's'}.`,
+          text: `Imported ${data.rounds.length} round${data.rounds.length === 1 ? '' : 's'}. Backup date restored.`,
         });
       } catch {
         setStatus({ type: 'error', text: 'That file could not be opened.' });

@@ -7,7 +7,7 @@ import {
 import StatCard from '../components/ui/StatCard';
 import EmptyState from '../components/ui/EmptyState';
 import {
-  calcAvgScore, calcBestRound, calcWorstRound,
+  calcAvgScore, calcBestRound,
   calcAvgFairways, calcAvgGIR, calcAvgPutts,
   scoreTrendData, statTrendData,
   calcHandicapIndex, isHandicapProvisional, handicapTrendData,
@@ -34,6 +34,13 @@ const CS = {
 
 function fmt(n, decimals = 1) {
   return n != null ? n.toFixed(decimals) : '—';
+}
+
+function scoreLabel(round) {
+  if (!round) return '—';
+  const normalized = round.score;
+  const raw = round.rawScore ?? round.score;
+  return round.holes === 9 ? `${normalized} norm (${raw} over 9H)` : String(normalized);
 }
 
 function ChartCard({ title, badge, children, height = 220, hint }) {
@@ -82,6 +89,8 @@ function RoundModal({ round, onClose }) {
   if (!round) return null;
   const diff = calcScoreDifferential(round);
   const is9 = round.holes === 9;
+  const normalizedScore = round.score;
+  const rawScore = round.rawScore ?? round.score;
 
   return (
     <div
@@ -102,7 +111,8 @@ function RoundModal({ round, onClose }) {
               {round.tees && <p className="text-xs text-slate-500 font-mono mt-0.5">{round.tees} tees</p>}
             </div>
             <div className="text-right">
-              <p className="text-4xl font-bold tabular-nums text-emerald-400">{round.rawScore}</p>
+              <p className="text-4xl font-bold tabular-nums text-emerald-400">{normalizedScore}</p>
+              {is9 && <p className="text-xs text-slate-500 font-mono mt-0.5">{rawScore} over 9H</p>}
               <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full mt-1 inline-block ${
                 is9 ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'
               }`}>{round.holes}H</span>
@@ -170,7 +180,6 @@ export default function Dashboard({ rounds, targets }) {
 
   const avg = calcAvgScore(rounds);
   const best = calcBestRound(rounds);
-  const worst = calcWorstRound(rounds);
   const avgFairways = calcAvgFairways(rounds);
   const avgGIR = calcAvgGIR(rounds);
   const avgPutts = calcAvgPutts(rounds);
@@ -241,7 +250,7 @@ export default function Dashboard({ rounds, targets }) {
       </div>
 
       {/* Secondary stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard label="Avg Fairways" value={fmt(avgFairways)}
           sub={targets?.fairways ? (avgFairways >= targets.fairways
             ? <span className="text-emerald-400 font-mono">✓ on target</span>
@@ -261,7 +270,7 @@ export default function Dashboard({ rounds, targets }) {
 
       {/* Birdie / Eagle cards */}
       {hasBirdieData && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatCard label="Total Birdies" value={totalBirdies} accent color="emerald"
             sub={<span className="font-mono">all rounds</span>}
           />
@@ -299,7 +308,7 @@ export default function Dashboard({ rounds, targets }) {
           <CartesianGrid strokeDasharray="3 3" stroke={CS.grid} />
           <XAxis dataKey="date" tick={CS.tick} />
           <YAxis tick={CS.tick} domain={['auto', 'auto']} />
-          <Tooltip {...CS.tooltip} formatter={(val, name, props) => [props.payload.rawScore ?? val, 'Score']} />
+          <Tooltip {...CS.tooltip} formatter={(val, name, props) => [scoreLabel(props.payload), 'Score']} />
           {targets?.score && (
             <ReferenceLine y={targets.score} stroke="#fbbf24" strokeDasharray="5 4" strokeWidth={1.5}
               label={{ value: `${targets.score}`, position: 'insideTopRight', fill: '#fbbf24', fontSize: 10, fontFamily: 'monospace' }}

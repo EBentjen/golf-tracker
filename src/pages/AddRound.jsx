@@ -183,7 +183,7 @@ export default function AddRound({ round, onAdd, onUpdate }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Date" error={errors.date}>
             <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} className={inputClass} />
           </Field>
@@ -192,7 +192,7 @@ export default function AddRound({ round, onAdd, onUpdate }) {
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Course Name" error={errors.course}>
             <input type="text" placeholder="e.g. Pebble Beach" value={form.course} onChange={(e) => set('course', e.target.value)} className={inputClass} />
           </Field>
@@ -201,7 +201,7 @@ export default function AddRound({ round, onAdd, onUpdate }) {
           </Field>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label="Fairways" hint={`0–${is9 ? 7 : 14}`} error={errors.fairways}>
             <input type="number" placeholder={is9 ? '4' : '8'} value={form.fairways} onChange={(e) => set('fairways', e.target.value)} className={inputClass} />
           </Field>
